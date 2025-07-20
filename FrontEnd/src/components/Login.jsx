@@ -10,7 +10,6 @@ const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    name: ''
   });
 
   const containerVariants = {
