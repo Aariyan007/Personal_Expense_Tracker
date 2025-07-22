@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState,useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import {UserDataContext} from './context/UserDataContext';
+import axios from 'axios';
+// import { set } from '../../../BackEnd';
 
 const Register = () => {
     const navigate = useNavigate();
@@ -13,6 +16,8 @@ const Register = () => {
         password: '',
         confirmPassword: ''
     });
+
+    const {user,setuserData} = useContext(UserDataContext);
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -74,14 +79,38 @@ const Register = () => {
         />
     ));
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async(e) => {
         e.preventDefault();
         if (formData.password !== formData.confirmPassword) {
             alert('Passwords do not match!');
             return;
         }
-        // Handle form submission
-        console.log('Registration form submitted:', formData);
+        const newUser = {
+            username: formData.name,
+            email: formData.email,
+            password: formData.password
+        }
+
+        const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/user/register`, newUser);
+
+        if(response.status === 201) {
+            const data = response.data;
+            setuserData(data.user);
+            localStorage.setItem('token', data.token);
+            navigate('/home');
+            console.log('Registration form submitted:', formData);
+        }
+        else{
+            navigate('/register');
+            console.error('Registration failed:', response.data);
+            alert('Registration failed. Please try again.');
+            setFormData({
+                name: '',
+                email: '',
+                password: '',
+                confirmPassword: ''
+            });
+        }
     };
 
     const handleSignIn = () => {

@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
 import Loader from './components/loader/loader.jsx';
+// import UserContext from './components/context/UserDataContext.jsx';
+import UserLogOut from './components/userLogOut.jsx';
+import UserProtectedWrapper from './components/UserProtectedWrapper.jsx';
 
 const Login = lazy(() => import('./components/Login'));
 const Home = lazy(() => import('./components/Home'));
@@ -13,9 +15,7 @@ const App = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setMinLoading(false);
-    }, 3000); 
-    setMinLoading(true);
-
+    }, 3000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -26,7 +26,16 @@ const App = () => {
   return (
     <Suspense fallback={<Loader />}>
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/home" element={
+          <UserProtectedWrapper>
+            <Home />
+          </UserProtectedWrapper>
+        } />
+        <Route path="/users/logout" element={
+          <UserProtectedWrapper>
+            <UserLogOut />
+          </UserProtectedWrapper>
+        } />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
       </Routes>

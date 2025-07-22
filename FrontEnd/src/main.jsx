@@ -4,24 +4,23 @@ import './index.css'
 import App from './App.jsx'
 import { BrowserRouter, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar.jsx'
-// import { Loader } from './components/loader/loader.jsx'
+import UserContext from './components/context/UserDataContext.jsx'
 
-const ContionalNavbar = () => {
+const ConditionalNavbar = () => {
   const location = useLocation();
-
   const hideNavbarRoutes = ['/login', '/register'];
-
   const shouldHideNavbar = hideNavbarRoutes.includes(location.pathname);
 
   return !shouldHideNavbar ? <Navbar /> : null;
-
 };
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-      <ContionalNavbar />
-      <App />
+      <ConditionalNavbar />
+      <UserContext>
+        <App />
+      </UserContext>
     </BrowserRouter>
   </StrictMode>,
 )

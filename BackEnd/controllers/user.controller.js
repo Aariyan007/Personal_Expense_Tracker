@@ -1,8 +1,9 @@
 const { validationResult } = require('express-validator');
 const db = require('../Db/db');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
-
+// Register User
 module.exports.registerUser = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -32,7 +33,16 @@ module.exports.registerUser = async (req, res) => {
                     return res.status(500).json({ error: "Database error on insert" });
                 }
 
-                return res.status(201).json({ message: "User registered successfully" });
+                // Create token
+                const token = jwt.sign(
+                    { id: insertResult.insertId, username, email },
+                    process.env.JWT_SECRET,
+                    { expiresIn: '1h' }
+                );
+
+                // Send token
+                res.cookie('token', token, { httpOnly: true });
+                return res.status(201).json({ message: "User registered successfully", token });
             });
         } catch (hashError) {
             console.error("Hashing Error:", hashError);
@@ -41,37 +51,66 @@ module.exports.registerUser = async (req, res) => {
     });
 };
 
+// Login User
 module.exports.loginUser = (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
 
-    const {email, password} = req.body;
+    const { email, password } = req.body;
+    const query = "SELECT * FROM users WHERE email = ?";
 
-    const query = "SELECT * FROM users where email = ?";
-
-    db.query(query,[email],async(err,results)=>{
-        if(err){
+    db.query(query, [email], async (err, results) => {
+        if (err) {
             console.error("DB Query Error:", err);
             return res.status(500).json({ error: "Database error on login" });
         }
 
-        if(results.length === 0 ){
-            return res.status(401).json({error : "Invalid email or password"});
+        if (results.length === 0) {
+            return res.status(401).json({ error: "Invalid email or password" });
         }
+
         const user = results[0];
         const isMatch = await bcrypt.compare(password, user.password_hash);
 
-        if(!isMatch){
-            return res.status(401).json({error : "Invalid email or password"});
+        if (!isMatch) {
+            return res.status(401).json({ error: "Invalid email or password" });
         }
-        return res.status(200).json({message : "Login successful", user: {id: user.id, username: user.username, email: user.email}});
-    })
 
+        // Create token
+        const token = jwt.sign(
+            { id: user.id, username: user.username, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
 
-}
+        res.cookie('token', token, { httpOnly: true });
+        return res.status(200).json({ message: "Login successful", token });
+    });
+};
 
-module.exports.getUserProfile = (req, res) => {
+// Get Profile
+module.exports.getProfile = (req, res) => {
+    res.status(200).json({ user: req.user });
+};
 
+module.exports.logOut = (req, res) => {
+    const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const BlackListedQuery = 'INSERT INTO blacklist_tokens (token) VALUES (?)';
+
+    db.query(BlackListedQuery, [token], (err, result) => {
+        if (err) {
+            console.error("DB Query Error:", err);
+            return res.status(500).json({ error: "Database error on token blacklist" });
+        }
+
+        res.clearCookie('token');
+        return res.status(200).json({ message: 'Logged out successfully' });
+    });
 }
