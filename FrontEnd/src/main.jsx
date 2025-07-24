@@ -5,10 +5,11 @@ import App from './App.jsx'
 import { BrowserRouter, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar.jsx'
 import UserContext from './components/context/UserDataContext.jsx'
+// import './index.css'
 
 const ConditionalNavbar = () => {
   const location = useLocation();
-  const hideNavbarRoutes = ['/login', '/register'];
+  const hideNavbarRoutes = ['/login', '/register','/'];
   const shouldHideNavbar = hideNavbarRoutes.includes(location.pathname);
 
   return !shouldHideNavbar ? <Navbar /> : null;

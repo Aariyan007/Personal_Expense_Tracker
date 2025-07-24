@@ -273,7 +273,7 @@ const Login = () => {
           >
             <p className="text-white/70">
               Don't have an account?{' '}
-              <motion.a onClick={() => Navigate('/register')}
+              <motion.a onClick={() => navigate('/register')}
                 href="#"
                 className="text-white font-semibold hover:underline"
                 whileHover={{ scale: 1.05 }}
@@ -289,7 +289,7 @@ const Login = () => {
           className="text-center mt-8 text-white/50 text-sm"
           variants={itemVariants}
         >
-          <p>© 2025 Your Company. All rights reserved.</p>
+          <p>© 2025 Lynux. All rights reserved.</p>
         </motion.div>
       </motion.div>
     </motion.div>

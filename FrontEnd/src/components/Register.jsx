@@ -1,8 +1,8 @@
-import React, { useState,useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import {UserDataContext} from './context/UserDataContext';
+import { UserDataContext } from './context/UserDataContext';
 import axios from 'axios';
 // import { set } from '../../../BackEnd';
 
@@ -17,7 +17,7 @@ const Register = () => {
         confirmPassword: ''
     });
 
-    const {user,setuserData} = useContext(UserDataContext);
+    const { user, setuserData } = useContext(UserDataContext);
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -79,7 +79,7 @@ const Register = () => {
         />
     ));
 
-    const handleSubmit = async(e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (formData.password !== formData.confirmPassword) {
             alert('Passwords do not match!');
@@ -93,14 +93,14 @@ const Register = () => {
 
         const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/user/register`, newUser);
 
-        if(response.status === 201) {
+        if (response.status === 201) {
             const data = response.data;
             setuserData(data.user);
             localStorage.setItem('token', data.token);
             navigate('/home');
             console.log('Registration form submitted:', formData);
         }
-        else{
+        else {
             navigate('/register');
             console.error('Registration failed:', response.data);
             alert('Registration failed. Please try again.');
@@ -114,7 +114,6 @@ const Register = () => {
     };
 
     const handleSignIn = () => {
-        // Navigate to login page - replace with your routing logic
         navigate('/login');
     };
 
@@ -361,7 +360,7 @@ const Register = () => {
                         variants={itemVariants}
                         className="text-center mt-8 text-white/60 text-sm"
                     >
-                        © 2025 Your Company. All rights reserved.
+                        © 2025 Lynux. All rights reserved.
                     </motion.div>
                 </div>
             </motion.div>
