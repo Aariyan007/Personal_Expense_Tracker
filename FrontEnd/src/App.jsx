@@ -3,6 +3,9 @@ import { Routes, Route } from 'react-router-dom';
 import Loader from './components/loader/loader.jsx';
 import UserLogOut from './components/userLogOut.jsx';
 import UserProtectedWrapper from './components/UserProtectedWrapper.jsx';
+import Onboarding1 from './components/onBoarding/onBoarding1.jsx';
+import Onboarding2 from './components/onBoarding/onBoarding2.jsx'; // ✅ fixed
+
 
 const Login = lazy(() => import('./components/Login'));
 const Home = lazy(() => import('./components/Home'));
@@ -26,7 +29,6 @@ const App = () => {
   return (
     <Suspense fallback={<Loader />}>
       <Routes>
-         <Route path=" " element={<Landing />} /> 
         <Route path="/" element={<Landing />} /> 
         <Route path="/home" element={
           <UserProtectedWrapper>
@@ -40,6 +42,8 @@ const App = () => {
         } />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/onboarding/step-1" element={<Onboarding1 />} />
+        <Route path="/onboarding/step-2" element={<Onboarding2 />} />
       </Routes>
     </Suspense>
   );

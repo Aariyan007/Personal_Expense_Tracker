@@ -16,6 +16,8 @@ router.post('/login',[
     body('password').notEmpty().withMessage('Password is required')
 ], userController.loginUser);
 
+router.post('/onboarding-2', authMiddleware.authUser, userController.onBoarding);
+
 router.get('/profile', authMiddleware.authUser, userController.getProfile);
 router.get('/logout', authMiddleware.authUser, userController.logOut);
 

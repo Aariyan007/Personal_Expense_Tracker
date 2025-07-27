@@ -2,8 +2,8 @@ const { validationResult } = require('express-validator');
 const db = require('../Db/db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const UserData = require('../models/schema'); 
 
-// Register User
 module.exports.registerUser = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -33,16 +33,41 @@ module.exports.registerUser = async (req, res) => {
                     return res.status(500).json({ error: "Database error on insert" });
                 }
 
-                // Create token
-                const token = jwt.sign(
-                    { id: insertResult.insertId, username, email },
-                    process.env.JWT_SECRET,
-                    { expiresIn: '1h' }
-                );
+                const userId = insertResult.insertId;
 
-                // Send token
-                res.cookie('token', token, { httpOnly: true });
-                return res.status(201).json({ message: "User registered successfully", token });
+                const updateLoginCountQuery = "UPDATE users SET login_count = login_count + 1 WHERE id = ?";
+                db.query(updateLoginCountQuery, [userId], (err2) => {
+                    if (err2) {
+                        console.error("Login count update error:", err2);
+                        return res.status(500).json({ error: "Error updating login count" });
+                    }
+
+                    // Now fetch the user with updated login_count
+                    const getUserQuery = "SELECT id, username, email, login_count FROM users WHERE id = ?";
+                    db.query(getUserQuery, [userId], (err3, result) => {
+                        if (err3) {
+                            console.error("User fetch error:", err3);
+                            return res.status(500).json({ error: "Error fetching user data" });
+                        }
+
+                        const user = result[0];
+
+                        // Create token
+                        const token = jwt.sign(
+                            { id: user.id, username: user.username, email: user.email },
+                            process.env.JWT_SECRET,
+                            { expiresIn: '1h' }
+                        );
+
+                        // Send token and user data
+                        res.cookie('token', token, { httpOnly: true });
+                        return res.status(201).json({
+                            message: "User registered successfully",
+                            token,
+                            user
+                        });
+                    });
+                });
             });
         } catch (hashError) {
             console.error("Hashing Error:", hashError);
@@ -78,17 +103,57 @@ module.exports.loginUser = (req, res) => {
             return res.status(401).json({ error: "Invalid email or password" });
         }
 
-        // Create token
-        const token = jwt.sign(
-            { id: user.id, username: user.username, email: user.email },
-            process.env.JWT_SECRET,
-            { expiresIn: '24h' }
-        );
+        const updateLoginCountQuery = "UPDATE users SET login_count = login_count + 1 WHERE id = ?";
+        db.query(updateLoginCountQuery, [user.id], (err2) => {
+            if (err2) {
+                console.error("Login count update error:", err2);
+                return res.status(500).json({ error: "Error updating login count" });
+            }
+            // Create token
+            const token = jwt.sign(
+                { id: user.id, username: user.username, email: user.email },
+                process.env.JWT_SECRET,
+                { expiresIn: '24h' }
+            );
 
-        res.cookie('token', token, { httpOnly: true });
-        return res.status(200).json({ message: "Login successful", token });
+            res.cookie('token', token, { httpOnly: true });
+            return res.status(200).json({
+                message: "Login successful", token, user: {
+                    id: user.id,
+                    username: user.username,
+                    email: user.email,
+                    login_count: user.login_count
+                }
+            });
+        });
     });
 };
+
+module.exports.onBoarding = async(req, res) => {
+    try {
+        const { monthlyIncome, currency, primaryGoal, budgetPreference, expenseCategories } = req.body;
+        const email = req.user.email;
+
+        const userData = await UserData.findOneAndUpdate(
+            { email },
+            {
+                email,
+                monthlyIncome,
+                currency,
+                primaryGoal,
+                budgetPreference,
+                expenseCategories
+            },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+        res.status(200).json({ message: 'Onboarding step 2 saved', data: userData });
+    } catch (err) {
+        console.error('Onboarding error:', err);
+        res.status(500).json({ message: 'Server error during onboarding' });
+
+    }
+}
+
 
 // Get Profile
 module.exports.getProfile = (req, res) => {

@@ -9,7 +9,7 @@ import UserContext from './components/context/UserDataContext.jsx'
 
 const ConditionalNavbar = () => {
   const location = useLocation();
-  const hideNavbarRoutes = ['/login', '/register','/'];
+  const hideNavbarRoutes = ['/login', '/register','/', '/onboarding/step-1', '/onboarding/step-2'];
   const shouldHideNavbar = hideNavbarRoutes.includes(location.pathname);
 
   return !shouldHideNavbar ? <Navbar /> : null;

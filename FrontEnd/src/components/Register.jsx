@@ -90,20 +90,28 @@ const Register = () => {
             email: formData.email,
             password: formData.password
         }
+        // console.log('Sending newUser:', newUser);
 
-        const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/user/register`, newUser);
+        try {
+            const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/user/register`, newUser);
 
-        if (response.status === 201) {
-            const data = response.data;
-            setuserData(data.user);
-            localStorage.setItem('token', data.token);
-            navigate('/home');
-            console.log('Registration form submitted:', formData);
-        }
-        else {
-            navigate('/register');
-            console.error('Registration failed:', response.data);
-            alert('Registration failed. Please try again.');
+            if (response.status === 201) {
+                const data = response.data;
+                setuserData(data.user);
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+
+                if (data.user.login_count === 0 || data.user.login_count === 1) {
+                    navigate('/onboarding/step-1');
+                } else {
+                    navigate('/home');
+                }
+
+                console.log('Registration SUBMITTED:', formData);
+            }
+        } catch (err) {
+            console.error('Registration failed:', err.response?.data || err.message);
+            alert(err.response?.data?.message || 'Registration failed. Please try again.');
             setFormData({
                 name: '',
                 email: '',
@@ -111,6 +119,7 @@ const Register = () => {
                 confirmPassword: ''
             });
         }
+
     };
 
     const handleSignIn = () => {
