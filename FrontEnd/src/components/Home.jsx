@@ -30,43 +30,106 @@ function ExpenseTrackerHome() {
     const fetchUserData = async () => {
       setIsLoading(true);
       setError('');
+
       try {
         const token = localStorage.getItem('token');
         const baseUrl = import.meta.env.VITE_BASE_URL;
 
-        // Fetch user details from onboarding
-        const userResponse = await axios.get(`${baseUrl}/user/profile`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setUserData(userResponse.data);
+        console.log('🔍 Debug Info:');
+        console.log('Token:', token ? 'Token exists' : 'No token found');
+        console.log('Base URL:', baseUrl);
 
-        // Fetch current month summary (assume an endpoint that computes this based on user data)
-        const monthResponse = await axios.get(`${baseUrl}/user/monthly-summary`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setCurrentMonth(monthResponse.data);
+        if (!token) {
+          setError('No authentication token found. Please login again.');
+          setIsLoading(false);
+          return;
+        }
 
-        // Fetch recent transactions
-        const transResponse = await axios.get(`${baseUrl}/user/transactions/recent`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setRecentTransactions(transResponse.data);
+        if (!baseUrl) {
+          setError('Base URL not configured. Check your .env file.');
+          setIsLoading(false);
+          return;
+        }
 
-        // Fetch category spending (assume computed from transactions and user categories)
-        const categoryResponse = await axios.get(`${baseUrl}/user/category-spending`, {
+        const axiosConfig = {
           headers: { Authorization: `Bearer ${token}` }
-        });
-        setCategorySpending(categoryResponse.data);
+        };
 
-        // Fetch AI insights (assume generated server-side based on user data)
-        const insightsResponse = await axios.get(`${baseUrl}/user/ai-insights`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setAiInsights(insightsResponse.data);
+        console.log('📡 Making API calls...');
+
+        // Test basic connectivity first
+        try {
+          console.log('Testing /user/details...');
+          const userResponse = await axios.get(`${baseUrl}/user/details`, axiosConfig);
+          console.log('✅ User details response:', userResponse.data);
+          setUserData(userResponse.data);
+        } catch (err) {
+          console.error('❌ User details error:', err.response?.data || err.message);
+          throw new Error(`User details failed: ${err.response?.data?.error || err.message}`);
+        }
+
+        try {
+          console.log('Testing /user/monthly-summary...');
+          const monthResponse = await axios.get(`${baseUrl}/user/monthly-summary`, axiosConfig);
+          console.log('✅ Monthly summary response:', monthResponse.data);
+          setCurrentMonth(monthResponse.data);
+        } catch (err) {
+          console.error('❌ Monthly summary error:', err.response?.data || err.message);
+          // Don't throw - use fallback data
+          setCurrentMonth({
+            spent: 0,
+            budget: 0,
+            savings: 0,
+            income: 0
+          });
+        }
+
+        try {
+          console.log('Testing /user/transactions/recent...');
+          const transResponse = await axios.get(`${baseUrl}/user/transactions/recent`, axiosConfig);
+          console.log('✅ Transactions response:', transResponse.data);
+          setRecentTransactions(transResponse.data);
+        } catch (err) {
+          console.error('❌ Transactions error:', err.response?.data || err.message);
+          setRecentTransactions([]);
+        }
+
+        try {
+          console.log('Testing /user/category-spending...');
+          const categoryResponse = await axios.get(`${baseUrl}/user/category-spending`, axiosConfig);
+          console.log('✅ Category spending response:', categoryResponse.data);
+          setCategorySpending(categoryResponse.data);
+        } catch (err) {
+          console.error('❌ Category spending error:', err.response?.data || err.message);
+          setCategorySpending([]);
+        }
+
+        try {
+          console.log('Testing /user/ai-insights...');
+          const insightsResponse = await axios.get(`${baseUrl}/user/ai-insights`, axiosConfig);
+          console.log('✅ AI insights response:', insightsResponse.data);
+          setAiInsights(insightsResponse.data);
+        } catch (err) {
+          console.error('❌ AI insights error:', err.response?.data || err.message);
+          setAiInsights([]);
+        }
 
       } catch (err) {
-        console.error('Error fetching ', err);
-        setError('Failed to load your data. Please try again.');
+        console.error('🚨 Fatal error in fetchUserData:', err);
+
+        // More detailed error information
+        if (err.code === 'NETWORK_ERROR') {
+          setError('Network error: Cannot connect to server. Is your backend running?');
+        } else if (err.response?.status === 401) {
+          setError('Authentication failed. Please login again.');
+          localStorage.removeItem('token'); // Clear invalid token
+        } else if (err.response?.status === 404) {
+          setError('API endpoint not found. Please check your backend routes.');
+        } else if (err.response?.status >= 500) {
+          setError('Server error. Please try again later.');
+        } else {
+          setError(err.message || 'Failed to load your data. Please try again.');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -83,15 +146,18 @@ function ExpenseTrackerHome() {
   const getGoalIcon = (goal) => {
     const icons = {
       save: '💰',
-      budget: '📊', 
+      budget: '📊',
       invest: '📈',
       debt: '💳'
     };
     return icons[goal] || '💰';
   };
 
-  const getSpendingPercentage = () => ((currentMonth.spent / currentMonth.budget) * 100).toFixed(1);
-  
+  const getSpendingPercentage = () => {
+    if (currentMonth.budget === 0) return 0;
+    return ((currentMonth.spent / currentMonth.budget) * 100).toFixed(1);
+  };
+
   const getBudgetStatus = () => {
     const percentage = getSpendingPercentage();
     if (percentage < 70) return { color: 'text-green-400', status: 'Great' };
@@ -126,17 +192,37 @@ function ExpenseTrackerHome() {
   };
 
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center text-white">Loading your dashboard...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto mb-4"></div>
+          <p>Loading your dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="min-h-screen flex items-center justify-center text-red-400">{error}</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <div className="text-center max-w-md mx-auto p-6">
+          <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <h2 className="text-xl font-bold mb-2">Oops! Something went wrong</h2>
+          <p className="text-red-400 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-
-      <motion.main 
+      <motion.main
         className="max-w-7xl mx-auto px-6 py-8 pt-24"
         variants={containerVariants}
         initial="hidden"
@@ -145,7 +231,7 @@ function ExpenseTrackerHome() {
         {/* Welcome Section */}
         <motion.div variants={itemVariants} className="mb-8">
           <h2 className="text-3xl md:text-4xl font-bold mb-2">
-            Welcome back, {userData.name}! {getGoalIcon(userData.primaryGoal)}
+            Welcome back, {userData.name || 'User'}! {getGoalIcon(userData.primaryGoal)}
           </h2>
           <p className="text-blue-200 text-lg">
             Here's your financial overview for July 2025
@@ -153,11 +239,11 @@ function ExpenseTrackerHome() {
         </motion.div>
 
         {/* Quick Stats Cards */}
-        <motion.div 
+        <motion.div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
           variants={containerVariants}
         >
-          <motion.div 
+          <motion.div
             variants={itemVariants}
             whileHover={cardHover}
             className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20"
@@ -172,7 +258,7 @@ function ExpenseTrackerHome() {
             <p className="text-blue-200 text-sm">Monthly Income</p>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             variants={itemVariants}
             whileHover={cardHover}
             className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20"
@@ -187,7 +273,7 @@ function ExpenseTrackerHome() {
             <p className="text-blue-200 text-sm">{getSpendingPercentage()}% of budget used</p>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             variants={itemVariants}
             whileHover={cardHover}
             className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20"
@@ -202,7 +288,7 @@ function ExpenseTrackerHome() {
             <p className="text-blue-200 text-sm">Saved this month</p>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             variants={itemVariants}
             whileHover={cardHover}
             className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20"
@@ -211,9 +297,13 @@ function ExpenseTrackerHome() {
               <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
                 <DollarSign className="w-6 h-6 text-blue-400" />
               </div>
-              <span className="text-sm text-green-400">+{(((currentMonth.budget - currentMonth.spent) / currentMonth.budget) * 100).toFixed(1)}%</span>
+              <span className="text-sm text-green-400">
+                +{currentMonth.budget > 0 ? (((currentMonth.budget - currentMonth.spent) / currentMonth.budget) * 100).toFixed(1) : 0}%
+              </span>
             </div>
-            <h3 className="text-2xl font-bold mb-1">{getCurrencySymbol(userData.currency)}{(currentMonth.budget - currentMonth.spent).toLocaleString()}</h3>
+            <h3 className="text-2xl font-bold mb-1">
+              {getCurrencySymbol(userData.currency)}{Math.max(0, currentMonth.budget - currentMonth.spent).toLocaleString()}
+            </h3>
             <p className="text-blue-200 text-sm">Remaining budget</p>
           </motion.div>
         </motion.div>
@@ -228,7 +318,7 @@ function ExpenseTrackerHome() {
                 <span className="text-sm bg-purple-500/20 text-purple-300 px-2 py-1 rounded-full">Smart</span>
               </h3>
               <div className="space-y-3">
-                {aiInsights.map((insight, index) => (
+                {aiInsights.length > 0 ? aiInsights.map((insight, index) => (
                   <motion.div
                     key={index}
                     whileHover={cardHover}
@@ -244,7 +334,11 @@ function ExpenseTrackerHome() {
                       {insight.action}
                     </button>
                   </motion.div>
-                ))}
+                )) : (
+                  <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 text-center text-blue-200">
+                    No insights available yet. Complete some transactions to get personalized tips!
+                  </div>
+                )}
               </div>
             </motion.div>
 
@@ -253,7 +347,7 @@ function ExpenseTrackerHome() {
               <h3 className="text-xl font-bold mb-4">Category Spending</h3>
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
                 <div className="space-y-4">
-                  {categorySpending.map((category, index) => (
+                  {categorySpending.length > 0 ? categorySpending.map((category, index) => (
                     <div key={index} className="space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="font-medium">{category.category}</span>
@@ -265,12 +359,16 @@ function ExpenseTrackerHome() {
                         <motion.div
                           className={`h-2 rounded-full ${category.color}`}
                           initial={{ width: 0 }}
-                          animate={{ width: `${(category.spent / category.budget) * 100}%` }}
+                          animate={{ width: `${Math.min((category.spent / category.budget) * 100, 100)}%` }}
                           transition={{ duration: 1, delay: index * 0.2 }}
                         />
                       </div>
                     </div>
-                  ))}
+                  )) : (
+                    <div className="text-center text-blue-200">
+                      No spending data available yet.
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -289,7 +387,7 @@ function ExpenseTrackerHome() {
                   <PlusCircle className="w-5 h-5" />
                   <span className="font-medium">Add Expense</span>
                 </motion.button>
-                
+
                 <motion.button
                   whileHover={cardHover}
                   className="w-full bg-white/10 backdrop-blur-md rounded-xl p-4 flex items-center gap-3 border border-white/20 hover:bg-white/20 transition-all"
@@ -297,7 +395,7 @@ function ExpenseTrackerHome() {
                   <BarChart3 className="w-5 h-5" />
                   <span className="font-medium">View Analytics</span>
                 </motion.button>
-                
+
                 <motion.button
                   whileHover={cardHover}
                   className="w-full bg-white/10 backdrop-blur-md rounded-xl p-4 flex items-center gap-3 border border-white/20 hover:bg-white/20 transition-all"
@@ -313,14 +411,13 @@ function ExpenseTrackerHome() {
               <h3 className="text-xl font-bold mb-4">Recent Transactions</h3>
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
                 <div className="space-y-4">
-                  {recentTransactions.map((transaction) => (
+                  {recentTransactions.length > 0 ? recentTransactions.map((transaction) => (
                     <div key={transaction.id} className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                          transaction.type === 'income' ? 'bg-green-500/20' : 'bg-red-500/20'
-                        }`}>
-                          {transaction.type === 'income' ? 
-                            <ArrowUpRight className="w-4 h-4 text-green-400" /> : 
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${transaction.type === 'income' ? 'bg-green-500/20' : 'bg-red-500/20'
+                          }`}>
+                          {transaction.type === 'income' ?
+                            <ArrowUpRight className="w-4 h-4 text-green-400" /> :
                             <ArrowDownRight className="w-4 h-4 text-red-400" />
                           }
                         </div>
@@ -329,17 +426,18 @@ function ExpenseTrackerHome() {
                           <p className="text-xs text-blue-200">{transaction.date}</p>
                         </div>
                       </div>
-                      <span className={`font-bold ${
-                        transaction.type === 'income' ? 'text-green-400' : 'text-red-400'
-                      }`}>
+                      <span className={`font-bold ${transaction.type === 'income' ? 'text-green-400' : 'text-red-400'
+                        }`}>
                         {transaction.type === 'income' ? '+' : ''}{getCurrencySymbol(userData.currency)}{Math.abs(transaction.amount)}
                       </span>
                     </div>
-                  ))}
+                  )) : (
+                    <div className="text-center text-blue-200">
+                      No transactions yet. Add your first expense!
+                    </div>
+                  )}
                 </div>
-                <button className="w-full mt-4 text-purple-400 text-sm hover:text-purple-300 transition-colors">
-                  View all transactions
-                </button>
+                
               </div>
             </motion.div>
           </div>

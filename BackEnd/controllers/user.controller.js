@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const UserData = require('../models/schema'); 
 
+// Existing registration code...
 module.exports.registerUser = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -42,7 +43,6 @@ module.exports.registerUser = async (req, res) => {
                         return res.status(500).json({ error: "Error updating login count" });
                     }
 
-                    // Now fetch the user with updated login_count
                     const getUserQuery = "SELECT id, username, email, login_count FROM users WHERE id = ?";
                     db.query(getUserQuery, [userId], (err3, result) => {
                         if (err3) {
@@ -51,15 +51,12 @@ module.exports.registerUser = async (req, res) => {
                         }
 
                         const user = result[0];
-
-                        // Create token
                         const token = jwt.sign(
                             { id: user.id, username: user.username, email: user.email },
                             process.env.JWT_SECRET,
                             { expiresIn: '1h' }
                         );
 
-                        // Send token and user data
                         res.cookie('token', token, { httpOnly: true });
                         return res.status(201).json({
                             message: "User registered successfully",
@@ -76,7 +73,7 @@ module.exports.registerUser = async (req, res) => {
     });
 };
 
-// Login User
+// Existing login code...
 module.exports.loginUser = (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -109,7 +106,7 @@ module.exports.loginUser = (req, res) => {
                 console.error("Login count update error:", err2);
                 return res.status(500).json({ error: "Error updating login count" });
             }
-            // Create token
+            
             const token = jwt.sign(
                 { id: user.id, username: user.username, email: user.email },
                 process.env.JWT_SECRET,
@@ -118,17 +115,20 @@ module.exports.loginUser = (req, res) => {
 
             res.cookie('token', token, { httpOnly: true });
             return res.status(200).json({
-                message: "Login successful", token, user: {
+                message: "Login successful", 
+                token, 
+                user: {
                     id: user.id,
                     username: user.username,
                     email: user.email,
-                    login_count: user.login_count
+                    login_count: user.login_count + 1
                 }
             });
         });
     });
 };
 
+// Existing onboarding...
 module.exports.onBoarding = async(req, res) => {
     try {
         const { monthlyIncome, currency, primaryGoal, budgetPreference, expenseCategories } = req.body;
@@ -150,12 +150,197 @@ module.exports.onBoarding = async(req, res) => {
     } catch (err) {
         console.error('Onboarding error:', err);
         res.status(500).json({ message: 'Server error during onboarding' });
-
     }
 }
 
+module.exports.getUserDetails = async (req, res) => {
+    try {
+        const email = req.user.email;
+        
+        // Get user data from MongoDB
+        const userData = await UserData.findOne({ email });
+        
+        if (!userData) {
+            return res.status(404).json({ error: 'User data not found. Please complete onboarding.' });
+        }
 
-// Get Profile
+        // Combine with user info from token
+        const userDetails = {
+            name: req.user.username,
+            email: req.user.email,
+            monthlyIncome: parseFloat(userData.monthlyIncome) || 0,
+            currency: userData.currency || 'USD',
+            primaryGoal: userData.primaryGoal || '',
+            budgetPreference: userData.budgetPreference || '',
+            expenseCategories: userData.expenseCategories || []
+        };
+
+        res.status(200).json(userDetails);
+    } catch (err) {
+        console.error('Get user details error:', err);
+        res.status(500).json({ error: 'Failed to fetch user details' });
+    }
+};
+
+
+module.exports.getMonthlySummary = async (req, res) => {
+    try {
+        const email = req.user.email;
+        const userData = await UserData.findOne({ email });
+        
+        if (!userData) {
+            return res.status(404).json({ error: 'User data not found' });
+        }
+
+        const income = parseFloat(userData.monthlyIncome) || 0;
+        
+        // Mock data - replace with actual transaction calculations
+        const mockSummary = {
+            income: income,
+            spent: Math.floor(income * 0.6), // 60% spent
+            budget: Math.floor(income * 0.8), // 80% budget
+            savings: Math.floor(income * 0.2)  // 20% saved
+        };
+
+        res.status(200).json(mockSummary);
+    } catch (err) {
+        console.error('Get monthly summary error:', err);
+        res.status(500).json({ error: 'Failed to fetch monthly summary' });
+    }
+};
+
+// Get recent transactions (mock data)
+module.exports.getRecentTransactions = async (req, res) => {
+    try {
+        const userData = await UserData.findOne({ email: req.user.email });
+        const currency = userData?.currency || 'USD';
+        
+        // Mock transactions - replace with actual database queries
+        const mockTransactions = [
+            {
+                id: 1,
+                desc: 'Grocery Shopping',
+                amount: -85.50,
+                type: 'expense',
+                date: '2 hours ago',
+                category: 'Food'
+            },
+            {
+                id: 2,  
+                desc: 'Salary Deposit',
+                amount: 3500.00,
+                type: 'income',
+                date: '1 day ago',
+                category: 'Income'
+            },
+            {
+                id: 3,
+                desc: 'Coffee Shop',
+                amount: -12.75,
+                type: 'expense', 
+                date: '2 days ago',
+                category: 'Food'
+            },
+            {
+                id: 4,
+                desc: 'Gas Station',
+                amount: -45.20,
+                type: 'expense',
+                date: '3 days ago', 
+                category: 'Transportation'
+            }
+        ];
+
+        res.status(200).json(mockTransactions);
+    } catch (err) {
+        console.error('Get recent transactions error:', err);
+        res.status(500).json({ error: 'Failed to fetch recent transactions' });
+    }
+};
+
+// Get category spending (mock data based on user categories)
+module.exports.getCategorySpending = async (req, res) => {
+    try {
+        const userData = await UserData.findOne({ email: req.user.email });
+        
+        if (!userData) {
+            return res.status(404).json({ error: 'User data not found' });
+        }
+
+        const income = parseFloat(userData.monthlyIncome) || 5000;
+        const categories = userData.expenseCategories || ['Food', 'Transportation', 'Entertainment'];
+        
+        // Mock category spending data
+        const categorySpending = categories.map((category, index) => {
+            const budgetPercentage = [0.3, 0.2, 0.15, 0.1, 0.1][index] || 0.1;
+            const spentPercentage = budgetPercentage * (0.6 + Math.random() * 0.4); // 60-100% of budget
+            
+            return {
+                category,
+                budget: Math.floor(income * budgetPercentage),
+                spent: Math.floor(income * spentPercentage),
+                color: ['bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500'][index % 5]
+            };
+        });
+
+        res.status(200).json(categorySpending);
+    } catch (err) {
+        console.error('Get category spending error:', err);
+        res.status(500).json({ error: 'Failed to fetch category spending' });
+    }
+};
+
+// Get AI insights (mock personalized insights)
+module.exports.getAIInsights = async (req, res) => {
+    try {
+        const userData = await UserData.findOne({ email: req.user.email });
+        
+        if (!userData) {
+            return res.status(404).json({ error: 'User data not found' });
+        }
+
+        const goal = userData.primaryGoal;
+        const budgetPref = userData.budgetPreference;
+        
+        // Generate insights based on user data
+        const insights = [];
+        
+        if (goal === 'save') {
+            insights.push({
+                type: 'tip',
+                message: 'You could save an extra $200 this month by reducing dining out expenses.',
+                action: 'View Details'
+            });
+        }
+        
+        if (budgetPref === 'strict') {
+            insights.push({
+                type: 'success', 
+                message: 'Great job! You\'re staying within your strict budget limits.',
+                action: 'Keep Going'
+            });
+        }
+        
+        insights.push({
+            type: 'warning',
+            message: 'You\'ve spent 75% of your monthly budget. Consider reviewing upcoming expenses.',
+            action: 'Review Budget'
+        });
+
+        insights.push({
+            type: 'tip',
+            message: `Based on your ${goal} goal, consider automating your savings.`,
+            action: 'Set Up Auto-Save'
+        });
+
+        res.status(200).json(insights);
+    } catch (err) {
+        console.error('Get AI insights error:', err);
+        res.status(500).json({ error: 'Failed to generate AI insights' });
+    }
+};
+
+// Existing endpoints...
 module.exports.getProfile = (req, res) => {
     res.status(200).json({ user: req.user });
 };

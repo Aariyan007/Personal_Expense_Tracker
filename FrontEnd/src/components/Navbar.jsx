@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Menu, X, Bell, Settings, User, Wallet, Search } from 'lucide-react';
 import { useState } from 'react';
 
-const navItems = ['Dashboard', 'Transactions', 'Analytics', 'Settings'];
+const navItems = ['Dashboard', 'Transactions', 'AI-PLANNER', 'Settings'];
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
