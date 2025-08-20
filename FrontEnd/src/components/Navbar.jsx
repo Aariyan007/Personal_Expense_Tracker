@@ -8,7 +8,7 @@ const navItems = ['Dashboard', 'Transactions', 'AI-PLANNER', 'Settings'];
 const Navbar = () => {
   const [open, setOpen] = useState(false);
   
-  // Animation variants for the main navbar background
+
   const navbarVariants = {
     hidden: { y: -100, opacity: 0 },
     visible: { 
@@ -23,13 +23,13 @@ const Navbar = () => {
     },
   };
 
-  // Animation variants for individual nav items
+
   const itemVariants = {
     hidden: { opacity: 0, y: -20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
   };
 
-  // Animation variants for the mobile menu
+
   const mobileMenuVariants = {
     hidden: { opacity: 0, y: -50, scale: 0.95 },
     visible: { 
@@ -57,19 +57,19 @@ const Navbar = () => {
       animate="visible"
       variants={navbarVariants}
     >
-      {/* Main Navbar */}
+
       <div className="fixed w-full bg-white/5 backdrop-blur-2xl shadow-2xl border-b border-white/10 supports-[backdrop-filter]:bg-white/5">
-        {/* Glassmorphism overlay effects */}
+
         <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-transparent to-indigo-500/10"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent"></div>
         
-        {/* Animated background particles */}
+
         <div className="absolute top-0 left-1/4 w-32 h-32 bg-purple-500/20 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse"></div>
         <div className="absolute top-0 right-1/4 w-24 h-24 bg-indigo-500/20 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse animation-delay-2s"></div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
-            {/* Logo Section */}
+
             <motion.div
               className="flex items-center gap-3 cursor-pointer group"
               initial={{ x: -30, opacity: 0 }}
@@ -91,7 +91,7 @@ const Navbar = () => {
               </div>
             </motion.div>
 
-            {/* Desktop Navigation */}
+
             <motion.div
               className="hidden md:flex items-center space-x-1 bg-white/5 rounded-2xl p-2 backdrop-blur-md border border-white/10"
               variants={{
@@ -111,22 +111,22 @@ const Navbar = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  {/* Hover background effect */}
+
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
                   <div className="absolute inset-0 bg-white/5 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm"></div>
                   
-                  {/* Text */}
+
                   <span className="relative z-10 uppercase tracking-wider">{item}</span>
                   
-                  {/* Underline effect */}
+
                   <span className="absolute left-4 right-4 bottom-1 h-0.5 bg-gradient-to-r from-purple-400 to-indigo-400 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-full"></span>
                 </motion.a>
               ))}
             </motion.div>
 
-            {/* Right Section - Search & Profile */}
+
             <div className="hidden md:flex items-center gap-3">
-              {/* Search Button */}
+
               <motion.button
                 className="p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all duration-300 backdrop-blur-md border border-white/10 group"
                 whileHover={{ scale: 1.05 }}
@@ -135,7 +135,7 @@ const Navbar = () => {
                 <Search className="w-5 h-5 text-white/80 group-hover:text-white transition-colors" />
               </motion.button>
 
-              {/* Notifications */}
+
               <motion.button
                 className="relative p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all duration-300 backdrop-blur-md border border-white/10 group"
                 whileHover={{ scale: 1.05 }}
@@ -145,7 +145,7 @@ const Navbar = () => {
                 <span className="absolute top-1 right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white/20 animate-pulse"></span>
               </motion.button>
 
-              {/* Settings */}
+
               <motion.button
                 className="p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all duration-300 backdrop-blur-md border border-white/10 group"
                 whileHover={{ scale: 1.05, rotate: 90 }}
@@ -155,7 +155,6 @@ const Navbar = () => {
                 <Settings className="w-5 h-5 text-white/80 group-hover:text-white transition-colors" />
               </motion.button>
 
-              {/* Profile */}
               <motion.div
                 className="relative ml-2"
                 whileHover={{ scale: 1.05 }}
@@ -168,7 +167,7 @@ const Navbar = () => {
               </motion.div>
             </div>
 
-            {/* Mobile menu button */}
+
             <div className="md:hidden">
               <motion.button
                 onClick={() => setOpen(!open)}
@@ -189,7 +188,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile menu dropdown */}
+
       {open && (
         <motion.div
           className="md:hidden fixed top-20 w-full bg-white/5 backdrop-blur-2xl text-white shadow-2xl border-b border-white/10 overflow-hidden"
@@ -198,7 +197,7 @@ const Navbar = () => {
           exit="exit"
           variants={mobileMenuVariants}
         >
-          {/* Background effects */}
+
           <div className="absolute inset-0 bg-gradient-to-b from-purple-500/10 to-indigo-500/10"></div>
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-white/5 to-transparent"></div>
           
@@ -230,7 +229,7 @@ const Navbar = () => {
               </motion.a>
             ))}
             
-            {/* Mobile Profile Section */}
+
             <motion.div
               className="mt-6 pt-6 border-t border-white/10"
               initial={{ opacity: 0, y: 20 }}
@@ -250,7 +249,7 @@ const Navbar = () => {
         </motion.div>
       )}
 
-      {/* Custom CSS for additional animations */}
+      {/* Custom CSS for additional animations thanks gpt*/}
       <style jsx>{`
         .animation-delay-2s {
           animation-delay: 2s;

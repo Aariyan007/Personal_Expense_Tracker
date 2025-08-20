@@ -139,7 +139,7 @@ const Register = () => {
 
     return (
         <div className="min-h-screen relative overflow-hidden">
-            {/* Top Navigation Bar */}
+
             <motion.nav
                 initial={{ y: -100, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -147,7 +147,7 @@ const Register = () => {
                 className="absolute top-0 left-0 right-0 z-50 p-6"
             >
                 <div className="max-w-7xl mx-auto flex justify-center items-center">
-                    {/* Logo */}
+
                     <motion.div
                         whileHover={{ scale: 1.05 }}
                         className="flex items-center space-x-2"
@@ -158,25 +158,25 @@ const Register = () => {
                         <span className="text-white text-xl font-bold flex items-center justify-center">Expense Tracker</span>
                     </motion.div>
 
-                    {/* Navigation Buttons */}
+
                 </div>
             </motion.nav>
 
-            {/* Animated Background */}
+
             <motion.div
                 className="absolute inset-0 w-full h-full"
                 variants={backgroundVariants}
                 animate="animate"
             />
 
-            {/* Floating Particles */}
+
             {floatingParticles}
 
-            {/* Gradient Orbs */}
+
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/30 rounded-full blur-3xl animate-pulse" />
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/30 rounded-full blur-3xl animate-pulse delay-1000" />
 
-            {/* Main Content */}
+
             <motion.div
                 className="relative z-10 min-h-screen flex items-center justify-center px-4 pt-20"
                 variants={containerVariants}
@@ -184,7 +184,7 @@ const Register = () => {
                 animate="visible"
             >
                 <div className="w-full max-w-md">
-                    {/* Logo/Brand */}
+
                     <motion.div
                         variants={itemVariants}
                         className="text-center mb-8"
@@ -200,13 +200,13 @@ const Register = () => {
                         </p>
                     </motion.div>
 
-                    {/* Form Container */}
+
                     <motion.div
                         variants={itemVariants}
                         className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 shadow-2xl"
                     >
                         <form onSubmit={handleSubmit} className="space-y-6">
-                            {/* Name Input */}
+
                             <motion.div variants={inputVariants} className="relative">
                                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 w-5 h-5" />
                                 <input
@@ -219,7 +219,7 @@ const Register = () => {
                                 />
                             </motion.div>
 
-                            {/* Email Input */}
+
                             <motion.div variants={inputVariants} className="relative">
                                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 w-5 h-5" />
                                 <input
@@ -232,7 +232,7 @@ const Register = () => {
                                 />
                             </motion.div>
 
-                            {/* Password Input */}
+
                             <motion.div variants={inputVariants} className="relative">
                                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 w-5 h-5" />
                                 <input
@@ -253,7 +253,7 @@ const Register = () => {
                                 </motion.button>
                             </motion.div>
 
-                            {/* Confirm Password Input */}
+
                             <motion.div variants={inputVariants} className="relative">
                                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 w-5 h-5" />
                                 <input
@@ -274,7 +274,7 @@ const Register = () => {
                                 </motion.button>
                             </motion.div>
 
-                            {/* Terms & Conditions */}
+
                             <div className="flex items-center space-x-2">
                                 <input
                                     type="checkbox"
@@ -294,7 +294,7 @@ const Register = () => {
                                 </label>
                             </div>
 
-                            {/* Submit Button */}
+
                             <motion.button
                                 type="submit"
                                 className="w-full cursor-pointer bg-white text-purple-600 font-semibold py-3 px-6 rounded-xl hover:bg-white/90 transition-all duration-200 flex items-center justify-center space-x-2 group"
@@ -305,7 +305,7 @@ const Register = () => {
                                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                             </motion.button>
 
-                            {/* Divider */}
+
                             <div className="relative">
                                 <div className="absolute inset-0 flex items-center">
                                     <div className="w-full border-t border-white/30"></div>
@@ -317,7 +317,7 @@ const Register = () => {
                                 </div>
                             </div>
 
-                            {/* Social Login */}
+
                             <div className="grid grid-cols-1 gap-3">
                                 <motion.button
                                     type="button"
@@ -347,7 +347,7 @@ const Register = () => {
                                 </motion.button>
                             </div>
 
-                            {/* Sign In Link */}
+
                             <div className="text-center mt-6">
                                 <p className="text-white/80">
                                     Already have an account?{' '}
@@ -364,7 +364,7 @@ const Register = () => {
                         </form>
                     </motion.div>
 
-                    {/* Footer */}
+
                     <motion.div
                         variants={itemVariants}
                         className="text-center mt-8 text-white/60 text-sm"

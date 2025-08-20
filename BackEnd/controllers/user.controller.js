@@ -364,3 +364,21 @@ module.exports.logOut = (req, res) => {
         return res.status(200).json({ message: 'Logged out successfully' });
     });
 }
+
+module.exports.getName = async(req,res) =>{
+    const email = req.user.email;
+    const query = "Select username from users where email = ?"
+    
+    db.query(query,[email],(err,result)=>{
+        if(err){
+            console.error("Database error:", err);
+            return res.status(500).json({ error: "Internal server error" });
+        }
+        if(result.length == 0){
+            console.log("user not found");
+            return res.status(404).json({ error: "User not found" });
+        }
+        const {username} = result[0];
+        res.status(200).json({username})
+    })
+};

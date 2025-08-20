@@ -35,7 +35,7 @@ function ExpenseTrackerHome() {
         const token = localStorage.getItem('token');
         const baseUrl = import.meta.env.VITE_BASE_URL;
 
-        console.log('🔍 Debug Info:');
+        console.log('Debug Info:');
         console.log('Token:', token ? 'Token exists' : 'No token found');
         console.log('Base URL:', baseUrl);
 
@@ -55,26 +55,26 @@ function ExpenseTrackerHome() {
           headers: { Authorization: `Bearer ${token}` }
         };
 
-        console.log('📡 Making API calls...');
+        console.log('Making API calls...');
 
         // Test basic connectivity first
         try {
           console.log('Testing /user/details...');
           const userResponse = await axios.get(`${baseUrl}/user/details`, axiosConfig);
-          console.log('✅ User details response:', userResponse.data);
+          console.log('User details response:', userResponse.data);
           setUserData(userResponse.data);
         } catch (err) {
-          console.error('❌ User details error:', err.response?.data || err.message);
+          console.error('User details error:', err.response?.data || err.message);
           throw new Error(`User details failed: ${err.response?.data?.error || err.message}`);
         }
 
         try {
           console.log('Testing /user/monthly-summary...');
           const monthResponse = await axios.get(`${baseUrl}/user/monthly-summary`, axiosConfig);
-          console.log('✅ Monthly summary response:', monthResponse.data);
+          console.log('Monthly summary response:', monthResponse.data);
           setCurrentMonth(monthResponse.data);
         } catch (err) {
-          console.error('❌ Monthly summary error:', err.response?.data || err.message);
+          console.error('Monthly summary error:', err.response?.data || err.message);
           // Don't throw - use fallback data
           setCurrentMonth({
             spent: 0,
@@ -87,30 +87,30 @@ function ExpenseTrackerHome() {
         try {
           console.log('Testing /user/transactions/recent...');
           const transResponse = await axios.get(`${baseUrl}/user/transactions/recent`, axiosConfig);
-          console.log('✅ Transactions response:', transResponse.data);
+          console.log('Transactions response:', transResponse.data);
           setRecentTransactions(transResponse.data);
         } catch (err) {
-          console.error('❌ Transactions error:', err.response?.data || err.message);
+          console.error('Transactions error:', err.response?.data || err.message);
           setRecentTransactions([]);
         }
 
         try {
           console.log('Testing /user/category-spending...');
           const categoryResponse = await axios.get(`${baseUrl}/user/category-spending`, axiosConfig);
-          console.log('✅ Category spending response:', categoryResponse.data);
+          console.log('Category spending response:', categoryResponse.data);
           setCategorySpending(categoryResponse.data);
         } catch (err) {
-          console.error('❌ Category spending error:', err.response?.data || err.message);
+          console.error('Category spending error:', err.response?.data || err.message);
           setCategorySpending([]);
         }
 
         try {
           console.log('Testing /user/ai-insights...');
           const insightsResponse = await axios.get(`${baseUrl}/user/ai-insights`, axiosConfig);
-          console.log('✅ AI insights response:', insightsResponse.data);
+          console.log('AI insights response:', insightsResponse.data);
           setAiInsights(insightsResponse.data);
         } catch (err) {
-          console.error('❌ AI insights error:', err.response?.data || err.message);
+          console.error('AI insights error:', err.response?.data || err.message);
           setAiInsights([]);
         }
 
@@ -374,9 +374,9 @@ function ExpenseTrackerHome() {
             </motion.div>
           </div>
 
-          {/* Right Column */}
+
           <div className="space-y-8">
-            {/* Quick Actions */}
+
             <motion.div variants={itemVariants}>
               <h3 className="text-xl font-bold mb-4">Quick Actions</h3>
               <div className="space-y-3">
@@ -406,7 +406,7 @@ function ExpenseTrackerHome() {
               </div>
             </motion.div>
 
-            {/* Recent Transactions */}
+
             <motion.div variants={itemVariants}>
               <h3 className="text-xl font-bold mb-4">Recent Transactions</h3>
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">

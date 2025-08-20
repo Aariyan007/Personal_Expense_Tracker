@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 const Landing = () => {
     const navigate = useNavigate();
     useEffect(() => {
-        // Load GSAP
+
         if (typeof window !== 'undefined' && !window.gsap) {
             const script = document.createElement('script');
             script.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js';
@@ -22,7 +22,7 @@ const Landing = () => {
             const { gsap } = window;
             if (!gsap) return;
 
-            // Simple hero animations
+
             const tl = gsap.timeline();
             tl.from('.hero-title', {
                 duration: 1,
@@ -43,7 +43,7 @@ const Landing = () => {
                     ease: 'power3.out'
                 }, '-=0.3');
 
-            // Random floating animations for cards
+
             gsap.to('.floating-card-1', {
                 x: 'random(-30, 30)',
                 y: 'random(-20, 20)',
@@ -65,7 +65,7 @@ const Landing = () => {
                 delay: 1
             });
 
-            // Animated background gradients
+          
             gsap.to('.bg-orb-1', {
                 x: 'random(-100, 100)',
                 y: 'random(-80, 80)',
@@ -102,19 +102,19 @@ const Landing = () => {
 
     return (
         <div className="min-h-screen bg-black text-white">
-            {/* Hero Section */}
+
             <section className="h-screen flex items-center justify-center relative overflow-hidden">
-                {/* Base gradient background */}
+                
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900"></div>
 
-                {/* Animated Background Effects */}
+
                 <div className="absolute inset-0">
-                    {/* Moving gradient orbs */}
+
                     <div className="bg-orb-1 absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded-full blur-3xl"></div>
                     <div className="bg-orb-2 absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-r from-blue-500/30 to-cyan-500/30 rounded-full blur-3xl"></div>
                     <div className="bg-orb-3 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-full blur-3xl"></div>
 
-                    {/* Animated gradient overlay */}
+
                     <div
                         className="absolute inset-0 opacity-30 pointer-events-none"
                         style={{
@@ -124,7 +124,7 @@ const Landing = () => {
                     ></div>
                 </div>
 
-                {/* Add CSS animation for gradient */}
+
                 <style jsx>{`
           @keyframes gradientShift {
             0%, 100% { 
@@ -139,7 +139,7 @@ const Landing = () => {
         `}</style>
 
                 <div className="relative z-10 text-center max-w-5xl mx-auto px-6">
-                    {/* Badge */}
+
                     <motion.div
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -152,17 +152,17 @@ const Landing = () => {
                         </div>
                     </motion.div>
 
-                    {/* Main Title */}
+
                     <h1 className="hero-title text-6xl md:text-8xl font-black mb-6 bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
                         ExpenseAI
                     </h1>
 
-                    {/* Subtitle */}
+
                     <p className="hero-subtitle text-xl md:text-2xl text-gray-300 mb-10 font-light max-w-3xl mx-auto">
                         Smart expense tracking powered by AI. Automatically categorize, analyze, and optimize your spending.
                     </p>
 
-                    {/* Buttons */}
+
                     <div className="hero-buttons flex flex-col sm:flex-row gap-4 justify-center">
                         <motion.button onClick={()=>{
                             navigate('/login');
@@ -178,7 +178,7 @@ const Landing = () => {
                     </div>
                 </div>
 
-                {/* Floating Cards with Random Movement */}
+
                 <motion.div
                     initial={{ opacity: 0, y: 100 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -208,7 +208,7 @@ const Landing = () => {
                 </motion.div>
             </section>
 
-            {/* Next Section - Features */}
+
             <section className="min-h-screen bg-gradient-to-br from-gray-900 to-black py-20 px-6">
                 <div className="max-w-6xl mx-auto text-center">
                     <motion.div
@@ -226,7 +226,7 @@ const Landing = () => {
                         </p>
                     </motion.div>
 
-                    {/* Feature Cards Grid */}
+
                     <div className="grid md:grid-cols-3 gap-8">
                         <motion.div
                             initial={{ opacity: 0, y: 50 }}
@@ -283,7 +283,7 @@ const Landing = () => {
                         </motion.div>
                     </div>
 
-                    {/* Stats Section */}
+
                     <motion.div
                         initial={{ opacity: 0, y: 50 }}
                         whileInView={{ opacity: 1, y: 0 }}
@@ -309,7 +309,7 @@ const Landing = () => {
                         </div>
                     </motion.div>
 
-                    {/* Final CTA */}
+
                     <motion.div
                         initial={{ opacity: 0, y: 50 }}
                         whileInView={{ opacity: 1, y: 0 }}
@@ -335,9 +335,9 @@ const Landing = () => {
                 </div>
             </section>
 
-            {/* Third Page - How It Works */}
+
             <section className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900/20 py-20 px-6 relative overflow-hidden">
-                {/* Background Animation */}
+
                 <div className="absolute inset-0">
                     <div className="absolute top-10 right-10 w-96 h-96 bg-gradient-to-r from-purple-600/10 to-pink-600/10 rounded-full blur-3xl animate-pulse"></div>
                     <div className="absolute bottom-10 left-10 w-80 h-80 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
@@ -359,9 +359,9 @@ const Landing = () => {
                         </p>
                     </motion.div>
 
-                    {/* Steps */}
+
                     <div className="space-y-20">
-                        {/* Step 1 */}
+
                         <motion.div
                             initial={{ opacity: 0, x: -100 }}
                             whileInView={{ opacity: 1, x: 0 }}
@@ -405,7 +405,7 @@ const Landing = () => {
                             </div>
                         </motion.div>
 
-                        {/* Step 2 */}
+
                         <motion.div
                             initial={{ opacity: 0, x: 100 }}
                             whileInView={{ opacity: 1, x: 0 }}
@@ -454,7 +454,7 @@ const Landing = () => {
                             </div>
                         </motion.div>
 
-                        {/* Step 3 */}
+
                         <motion.div
                             initial={{ opacity: 0, x: -100 }}
                             whileInView={{ opacity: 1, x: 0 }}
@@ -495,7 +495,7 @@ const Landing = () => {
                         </motion.div>
                     </div>
 
-                    {/* Final CTA for Page 3 */}
+
                     <motion.div
                         initial={{ opacity: 0, y: 50 }}
                         whileInView={{ opacity: 1, y: 0 }}

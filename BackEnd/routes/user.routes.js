@@ -30,5 +30,6 @@ router.get('/monthly-summary', authMiddleware.authUser, userController.getMonthl
 router.get('/transactions/recent', authMiddleware.authUser, userController.getRecentTransactions);
 router.get('/category-spending', authMiddleware.authUser, userController.getCategorySpending);
 router.get('/ai-insights', authMiddleware.authUser, userController.getAIInsights);
+router.get('/name', authMiddleware.authUser, userController.getName);
 
 module.exports = router;
