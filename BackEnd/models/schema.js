@@ -7,7 +7,7 @@ const userDataSchema = new mongoose.Schema({
         unique: true
     },
     monthlyIncome: {
-        type: String,
+        type: Number,
         required: true
     },
     currency: {

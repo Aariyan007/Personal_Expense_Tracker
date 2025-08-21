@@ -3,6 +3,7 @@ const db = require('../Db/db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const UserData = require('../models/schema'); 
+const Expense = require('../models/ExpenseSchema'); 
 
 // Existing registration code...
 module.exports.registerUser = async (req, res) => {
@@ -138,7 +139,7 @@ module.exports.onBoarding = async(req, res) => {
             { email },
             {
                 email,
-                monthlyIncome,
+                monthlyIncome: parseFloat(monthlyIncome), // Ensure it's a number
                 currency,
                 primaryGoal,
                 budgetPreference,
@@ -153,6 +154,7 @@ module.exports.onBoarding = async(req, res) => {
     }
 }
 
+// UPDATED: Get user details with real data
 module.exports.getUserDetails = async (req, res) => {
     try {
         const email = req.user.email;
@@ -182,161 +184,284 @@ module.exports.getUserDetails = async (req, res) => {
     }
 };
 
-
+// UPDATED: Get monthly summary with real expense calculations
 module.exports.getMonthlySummary = async (req, res) => {
     try {
         const email = req.user.email;
         const userData = await UserData.findOne({ email });
         
         if (!userData) {
-            return res.status(404).json({ error: 'User data not found' });
+            return res.status(404).json({
+                success: false,
+                error: 'User data not found'
+            });
         }
 
-        const income = parseFloat(userData.monthlyIncome) || 0;
-        
-        // Mock data - replace with actual transaction calculations
-        const mockSummary = {
-            income: income,
-            spent: Math.floor(income * 0.6), // 60% spent
-            budget: Math.floor(income * 0.8), // 80% budget
-            savings: Math.floor(income * 0.2)  // 20% saved
-        };
+        // Get current month date range
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-        res.status(200).json(mockSummary);
+        // Calculate monthly expenses and income from actual transactions
+        const monthlyExpenses = await Expense.aggregate([
+            {
+                $match: {
+                    userId: req.user.id, // Use MySQL user ID
+                    date: {
+                        $gte: startOfMonth,
+                        $lte: endOfMonth
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: '$type',
+                    total: { $sum: '$amount' }
+                }
+            }
+        ]);
+
+        let spent = 0;
+        let additionalIncome = 0;
+
+        monthlyExpenses.forEach(item => {
+            if (item._id === 'expense') {
+                spent = item.total;
+            } else if (item._id === 'income') {
+                additionalIncome = item.total;
+            }
+        });
+
+        // Add base monthly income from user data
+        const baseIncome = parseFloat(userData.monthlyIncome) || 0;
+        const totalIncome = baseIncome + additionalIncome;
+
+        // Calculate budget (you can implement your own logic)
+        // For now, let's assume budget is 80% of income
+        const budget = totalIncome * 0.8;
+        const savings = totalIncome - spent;
+
+        res.json({
+            spent: Math.round(spent * 100) / 100,
+            budget: Math.round(budget * 100) / 100,
+            savings: Math.round(savings * 100) / 100,
+            income: Math.round(totalIncome * 100) / 100
+        });
+
     } catch (err) {
         console.error('Get monthly summary error:', err);
-        res.status(500).json({ error: 'Failed to fetch monthly summary' });
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch monthly summary'
+        });
     }
 };
 
-// Get recent transactions (mock data)
+// UPDATED: Get recent transactions from actual expense data
 module.exports.getRecentTransactions = async (req, res) => {
     try {
-        const userData = await UserData.findOne({ email: req.user.email });
-        const currency = userData?.currency || 'USD';
-        
-        // Mock transactions - replace with actual database queries
-        const mockTransactions = [
-            {
-                id: 1,
-                desc: 'Grocery Shopping',
-                amount: -85.50,
-                type: 'expense',
-                date: '2 hours ago',
-                category: 'Food'
-            },
-            {
-                id: 2,  
-                desc: 'Salary Deposit',
-                amount: 3500.00,
-                type: 'income',
-                date: '1 day ago',
-                category: 'Income'
-            },
-            {
-                id: 3,
-                desc: 'Coffee Shop',
-                amount: -12.75,
-                type: 'expense', 
-                date: '2 days ago',
-                category: 'Food'
-            },
-            {
-                id: 4,
-                desc: 'Gas Station',
-                amount: -45.20,
-                type: 'expense',
-                date: '3 days ago', 
-                category: 'Transportation'
-            }
-        ];
+        const limit = parseInt(req.query.limit) || 10;
 
-        res.status(200).json(mockTransactions);
+        const transactions = await Expense.find({ userId: req.user.id })
+            .sort({ date: -1 })
+            .limit(limit)
+            .lean();
+
+        const formattedTransactions = transactions.map(transaction => ({
+            id: transaction._id,
+            desc: transaction.description,
+            amount: transaction.amount,
+            type: transaction.type,
+            category: transaction.category,
+            date: new Date(transaction.date).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+            })
+        }));
+
+        res.json(formattedTransactions);
+
     } catch (err) {
         console.error('Get recent transactions error:', err);
-        res.status(500).json({ error: 'Failed to fetch recent transactions' });
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch recent transactions'
+        });
     }
 };
 
-// Get category spending (mock data based on user categories)
+// UPDATED: Get category spending from real expense data
 module.exports.getCategorySpending = async (req, res) => {
     try {
-        const userData = await UserData.findOne({ email: req.user.email });
+        const email = req.user.email;
+        const userData = await UserData.findOne({ email });
         
         if (!userData) {
-            return res.status(404).json({ error: 'User data not found' });
+            return res.status(404).json({
+                success: false,
+                error: 'User data not found'
+            });
         }
 
-        const income = parseFloat(userData.monthlyIncome) || 5000;
-        const categories = userData.expenseCategories || ['Food', 'Transportation', 'Entertainment'];
-        
-        // Mock category spending data
-        const categorySpending = categories.map((category, index) => {
-            const budgetPercentage = [0.3, 0.2, 0.15, 0.1, 0.1][index] || 0.1;
-            const spentPercentage = budgetPercentage * (0.6 + Math.random() * 0.4); // 60-100% of budget
-            
-            return {
-                category,
-                budget: Math.floor(income * budgetPercentage),
-                spent: Math.floor(income * spentPercentage),
-                color: ['bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500'][index % 5]
-            };
+        // Get current month date range
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+        // Get spending by category for current month
+        const categorySpending = await Expense.aggregate([
+            {
+                $match: {
+                    userId: req.user.id,
+                    type: 'expense',
+                    date: {
+                        $gte: startOfMonth,
+                        $lte: endOfMonth
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: '$category',
+                    spent: { $sum: '$amount' }
+                }
+            }
+        ]);
+
+        // Create a map of spent amounts
+        const spentMap = {};
+        categorySpending.forEach(item => {
+            spentMap[item._id] = item.spent;
         });
 
-        res.status(200).json(categorySpending);
+        // Calculate budget per category (simple equal distribution for now)
+        const totalBudget = (parseFloat(userData.monthlyIncome) || 0) * 0.8;
+        const budgetPerCategory = userData.expenseCategories.length > 0 ? 
+            totalBudget / userData.expenseCategories.length : 0;
+
+        // Color palette for categories
+        const colors = [
+            'bg-gradient-to-r from-purple-500 to-pink-500',
+            'bg-gradient-to-r from-blue-500 to-cyan-500',
+            'bg-gradient-to-r from-green-500 to-emerald-500',
+            'bg-gradient-to-r from-yellow-500 to-orange-500',
+            'bg-gradient-to-r from-red-500 to-pink-500',
+            'bg-gradient-to-r from-indigo-500 to-purple-500'
+        ];
+
+        const result = userData.expenseCategories.map((category, index) => ({
+            category: category.charAt(0).toUpperCase() + category.slice(1),
+            spent: Math.round((spentMap[category.toLowerCase()] || 0) * 100) / 100,
+            budget: Math.round(budgetPerCategory * 100) / 100,
+            color: colors[index % colors.length]
+        }));
+
+        res.json(result);
+
     } catch (err) {
         console.error('Get category spending error:', err);
-        res.status(500).json({ error: 'Failed to fetch category spending' });
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch category spending'
+        });
     }
 };
 
-// Get AI insights (mock personalized insights)
+// UPDATED: Generate AI insights based on real spending data
 module.exports.getAIInsights = async (req, res) => {
     try {
-        const userData = await UserData.findOne({ email: req.user.email });
+        const email = req.user.email;
+        const userData = await UserData.findOne({ email });
         
         if (!userData) {
-            return res.status(404).json({ error: 'User data not found' });
+            return res.status(404).json({
+                success: false,
+                error: 'User data not found'
+            });
         }
 
-        const goal = userData.primaryGoal;
-        const budgetPref = userData.budgetPreference;
-        
-        // Generate insights based on user data
+        // Get current month date range
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+        // Get monthly spending data
+        const monthlyExpenses = await Expense.aggregate([
+            {
+                $match: {
+                    userId: req.user.id,
+                    type: 'expense',
+                    date: {
+                        $gte: startOfMonth,
+                        $lte: endOfMonth
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalSpent: { $sum: '$amount' },
+                    transactionCount: { $sum: 1 }
+                }
+            }
+        ]);
+
         const insights = [];
-        
-        if (goal === 'save') {
+        const monthlyIncome = parseFloat(userData.monthlyIncome) || 0;
+        const budget = monthlyIncome * 0.8;
+        const totalSpent = monthlyExpenses.length > 0 ? monthlyExpenses[0].totalSpent : 0;
+        const transactionCount = monthlyExpenses.length > 0 ? monthlyExpenses[0].transactionCount : 0;
+
+        // Generate insights based on spending patterns
+        if (totalSpent > budget) {
+            insights.push({
+                type: 'warning',
+                message: `You've exceeded your budget by $${Math.round((totalSpent - budget) * 100) / 100} this month.`,
+                action: 'Review spending'
+            });
+        } else if (totalSpent < budget * 0.5) {
+            insights.push({
+                type: 'success',
+                message: `Great job! You're well within budget this month.`,
+                action: 'Keep it up'
+            });
+        }
+
+        if (transactionCount < 5) {
             insights.push({
                 type: 'tip',
-                message: 'You could save an extra $200 this month by reducing dining out expenses.',
-                action: 'View Details'
+                message: 'Track more expenses to get better insights and recommendations.',
+                action: 'Add expenses'
             });
         }
-        
-        if (budgetPref === 'strict') {
+
+        // Savings insight
+        const savings = monthlyIncome - totalSpent;
+        if (savings > monthlyIncome * 0.2) {
             insights.push({
-                type: 'success', 
-                message: 'Great job! You\'re staying within your strict budget limits.',
-                action: 'Keep Going'
+                type: 'success',
+                message: `Excellent! You've saved $${Math.round(savings * 100) / 100} this month.`,
+                action: 'Consider investing'
             });
         }
-        
-        insights.push({
-            type: 'warning',
-            message: 'You\'ve spent 75% of your monthly budget. Consider reviewing upcoming expenses.',
-            action: 'Review Budget'
-        });
 
-        insights.push({
-            type: 'tip',
-            message: `Based on your ${goal} goal, consider automating your savings.`,
-            action: 'Set Up Auto-Save'
-        });
+        // Goal-based insights
+        if (userData.primaryGoal === 'save' && savings > 0) {
+            insights.push({
+                type: 'tip',
+                message: 'Consider setting up automatic transfers to boost your savings goal.',
+                action: 'Set up auto-save'
+            });
+        }
 
-        res.status(200).json(insights);
+        res.json(insights);
+
     } catch (err) {
         console.error('Get AI insights error:', err);
-        res.status(500).json({ error: 'Failed to generate AI insights' });
+        res.status(500).json({
+            success: false,
+            error: 'Failed to generate insights'
+        });
     }
 };
 

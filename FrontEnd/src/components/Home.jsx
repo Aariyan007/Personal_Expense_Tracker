@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { PlusCircle, TrendingUp, TrendingDown, Target, DollarSign, Calendar, BarChart3, PieChart, Bell, Settings, User, CreditCard, Wallet, ArrowUpRight, ArrowDownRight, CheckCircle, AlertCircle } from 'lucide-react';
 import axios from 'axios';
+import AddExpense from './Addexpense'; // Import the AddExpense component
 
 function ExpenseTrackerHome() {
   const [userData, setUserData] = useState({
@@ -25,118 +26,125 @@ function ExpenseTrackerHome() {
   const [aiInsights, setAiInsights] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showAddExpense, setShowAddExpense] = useState(false); // New state for modal
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      setIsLoading(true);
-      setError('');
-
-      try {
-        const token = localStorage.getItem('token');
-        const baseUrl = import.meta.env.VITE_BASE_URL;
-
-        console.log('Debug Info:');
-        console.log('Token:', token ? 'Token exists' : 'No token found');
-        console.log('Base URL:', baseUrl);
-
-        if (!token) {
-          setError('No authentication token found. Please login again.');
-          setIsLoading(false);
-          return;
-        }
-
-        if (!baseUrl) {
-          setError('Base URL not configured. Check your .env file.');
-          setIsLoading(false);
-          return;
-        }
-
-        const axiosConfig = {
-          headers: { Authorization: `Bearer ${token}` }
-        };
-
-        console.log('Making API calls...');
-
-        // Test basic connectivity first
-        try {
-          console.log('Testing /user/details...');
-          const userResponse = await axios.get(`${baseUrl}/user/details`, axiosConfig);
-          console.log('User details response:', userResponse.data);
-          setUserData(userResponse.data);
-        } catch (err) {
-          console.error('User details error:', err.response?.data || err.message);
-          throw new Error(`User details failed: ${err.response?.data?.error || err.message}`);
-        }
-
-        try {
-          console.log('Testing /user/monthly-summary...');
-          const monthResponse = await axios.get(`${baseUrl}/user/monthly-summary`, axiosConfig);
-          console.log('Monthly summary response:', monthResponse.data);
-          setCurrentMonth(monthResponse.data);
-        } catch (err) {
-          console.error('Monthly summary error:', err.response?.data || err.message);
-          // Don't throw - use fallback data
-          setCurrentMonth({
-            spent: 0,
-            budget: 0,
-            savings: 0,
-            income: 0
-          });
-        }
-
-        try {
-          console.log('Testing /user/transactions/recent...');
-          const transResponse = await axios.get(`${baseUrl}/user/transactions/recent`, axiosConfig);
-          console.log('Transactions response:', transResponse.data);
-          setRecentTransactions(transResponse.data);
-        } catch (err) {
-          console.error('Transactions error:', err.response?.data || err.message);
-          setRecentTransactions([]);
-        }
-
-        try {
-          console.log('Testing /user/category-spending...');
-          const categoryResponse = await axios.get(`${baseUrl}/user/category-spending`, axiosConfig);
-          console.log('Category spending response:', categoryResponse.data);
-          setCategorySpending(categoryResponse.data);
-        } catch (err) {
-          console.error('Category spending error:', err.response?.data || err.message);
-          setCategorySpending([]);
-        }
-
-        try {
-          console.log('Testing /user/ai-insights...');
-          const insightsResponse = await axios.get(`${baseUrl}/user/ai-insights`, axiosConfig);
-          console.log('AI insights response:', insightsResponse.data);
-          setAiInsights(insightsResponse.data);
-        } catch (err) {
-          console.error('AI insights error:', err.response?.data || err.message);
-          setAiInsights([]);
-        }
-
-      } catch (err) {
-        console.error('🚨 Fatal error in fetchUserData:', err);
-
-        // More detailed error information
-        if (err.code === 'NETWORK_ERROR') {
-          setError('Network error: Cannot connect to server. Is your backend running?');
-        } else if (err.response?.status === 401) {
-          setError('Authentication failed. Please login again.');
-          localStorage.removeItem('token'); // Clear invalid token
-        } else if (err.response?.status === 404) {
-          setError('API endpoint not found. Please check your backend routes.');
-        } else if (err.response?.status >= 500) {
-          setError('Server error. Please try again later.');
-        } else {
-          setError(err.message || 'Failed to load your data. Please try again.');
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchUserData();
   }, []);
+
+  const fetchUserData = async () => {
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const token = localStorage.getItem('token');
+      const baseUrl = import.meta.env.VITE_BASE_URL;
+
+      console.log('Debug Info:');
+      console.log('Token:', token ? 'Token exists' : 'No token found');
+      console.log('Base URL:', baseUrl);
+
+      if (!token) {
+        setError('No authentication token found. Please login again.');
+        setIsLoading(false);
+        return;
+      }
+
+      if (!baseUrl) {
+        setError('Base URL not configured. Check your .env file.');
+        setIsLoading(false);
+        return;
+      }
+
+      const axiosConfig = {
+        headers: { Authorization: `Bearer ${token}` }
+      };
+
+      console.log('Making API calls...');
+
+      // Test basic connectivity first
+      try {
+        console.log('Testing /user/details...');
+        const userResponse = await axios.get(`${baseUrl}/user/details`, axiosConfig);
+        console.log('User details response:', userResponse.data);
+        setUserData(userResponse.data);
+      } catch (err) {
+        console.error('User details error:', err.response?.data || err.message);
+        throw new Error(`User details failed: ${err.response?.data?.error || err.message}`);
+      }
+
+      try {
+        console.log('Testing /user/monthly-summary...');
+        const monthResponse = await axios.get(`${baseUrl}/user/monthly-summary`, axiosConfig);
+        console.log('Monthly summary response:', monthResponse.data);
+        setCurrentMonth(monthResponse.data);
+      } catch (err) {
+        console.error('Monthly summary error:', err.response?.data || err.message);
+        // Don't throw - use fallback data
+        setCurrentMonth({
+          spent: 0,
+          budget: 0,
+          savings: 0,
+          income: 0
+        });
+      }
+
+      try {
+        console.log('Testing /user/transactions/recent...');
+        const transResponse = await axios.get(`${baseUrl}/user/transactions/recent`, axiosConfig);
+        console.log('Transactions response:', transResponse.data);
+        setRecentTransactions(transResponse.data);
+      } catch (err) {
+        console.error('Transactions error:', err.response?.data || err.message);
+        setRecentTransactions([]);
+      }
+
+      try {
+        console.log('Testing /user/category-spending...');
+        const categoryResponse = await axios.get(`${baseUrl}/user/category-spending`, axiosConfig);
+        console.log('Category spending response:', categoryResponse.data);
+        setCategorySpending(categoryResponse.data);
+      } catch (err) {
+        console.error('Category spending error:', err.response?.data || err.message);
+        setCategorySpending([]);
+      }
+
+      try {
+        console.log('Testing /user/ai-insights...');
+        const insightsResponse = await axios.get(`${baseUrl}/user/ai-insights`, axiosConfig);
+        console.log('AI insights response:', insightsResponse.data);
+        setAiInsights(insightsResponse.data);
+      } catch (err) {
+        console.error('AI insights error:', err.response?.data || err.message);
+        setAiInsights([]);
+      }
+
+    } catch (err) {
+      console.error('🚨 Fatal error in fetchUserData:', err);
+
+      // More detailed error information
+      if (err.code === 'NETWORK_ERROR') {
+        setError('Network error: Cannot connect to server. Is your backend running?');
+      } else if (err.response?.status === 401) {
+        setError('Authentication failed. Please login again.');
+        localStorage.removeItem('token'); // Clear invalid token
+      } else if (err.response?.status === 404) {
+        setError('API endpoint not found. Please check your backend routes.');
+      } else if (err.response?.status >= 500) {
+        setError('Server error. Please try again later.');
+      } else {
+        setError(err.message || 'Failed to load your data. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Function to refresh data after adding expense
+  const handleExpenseAdded = () => {
+    console.log('Expense added, refreshing data...');
+    fetchUserData();
+  };
 
   const getCurrencySymbol = (currency) => {
     const symbols = { USD: '$', EUR: '€', GBP: '£', INR: '₹', CAD: 'C$' };
@@ -234,7 +242,7 @@ function ExpenseTrackerHome() {
             Welcome back, {userData.name || 'User'}! {getGoalIcon(userData.primaryGoal)}
           </h2>
           <p className="text-blue-200 text-lg">
-            Here's your financial overview for July 2025
+            Here's your financial overview for {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
           </p>
         </motion.div>
 
@@ -366,7 +374,7 @@ function ExpenseTrackerHome() {
                     </div>
                   )) : (
                     <div className="text-center text-blue-200">
-                      No spending data available yet.
+                      No spending data available yet. Add some expenses to see your category breakdown!
                     </div>
                   )}
                 </div>
@@ -374,14 +382,15 @@ function ExpenseTrackerHome() {
             </motion.div>
           </div>
 
-
+          {/* Right Column */}
           <div className="space-y-8">
-
+            {/* Quick Actions */}
             <motion.div variants={itemVariants}>
               <h3 className="text-xl font-bold mb-4">Quick Actions</h3>
               <div className="space-y-3">
                 <motion.button
                   whileHover={cardHover}
+                  onClick={() => setShowAddExpense(true)}
                   className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl p-4 flex items-center gap-3 hover:from-purple-600 hover:to-indigo-700 transition-all"
                 >
                   <PlusCircle className="w-5 h-5" />
@@ -406,7 +415,7 @@ function ExpenseTrackerHome() {
               </div>
             </motion.div>
 
-
+            {/* Recent Transactions */}
             <motion.div variants={itemVariants}>
               <h3 className="text-xl font-bold mb-4">Recent Transactions</h3>
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
@@ -433,16 +442,23 @@ function ExpenseTrackerHome() {
                     </div>
                   )) : (
                     <div className="text-center text-blue-200">
-                      No transactions yet. Add your first expense!
+                      No transactions yet. Add your first expense to get started!
                     </div>
                   )}
                 </div>
-                
               </div>
             </motion.div>
           </div>
         </div>
       </motion.main>
+
+      {/* Add Expense Modal */}
+      {showAddExpense && (
+        <AddExpense
+          onClose={() => setShowAddExpense(false)}
+          onExpenseAdded={handleExpenseAdded}
+        />
+      )}
     </div>
   );
 }
