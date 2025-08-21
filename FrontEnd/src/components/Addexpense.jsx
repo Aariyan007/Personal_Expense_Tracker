@@ -88,12 +88,12 @@ const AddExpense = ({ onClose, onExpenseAdded }) => {
       if (response.data.success) {
         setShowSuccess(true);
         
-        // Call callback to refresh home page data
+     
         if (onExpenseAdded) {
           onExpenseAdded();
         }
         
-        // Auto close after success
+
         setTimeout(() => {
           setShowSuccess(false);
           onClose();
@@ -185,7 +185,7 @@ const AddExpense = ({ onClose, onExpenseAdded }) => {
         exit="exit"
         className="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 rounded-3xl p-6 w-full max-w-md border border-white/20"
       >
-        {/* Header */}
+        
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={onClose}
@@ -197,7 +197,7 @@ const AddExpense = ({ onClose, onExpenseAdded }) => {
           <div className="w-10" /> {/* Spacer */}
         </div>
 
-        {/* Error Message */}
+      
         {error && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -209,9 +209,9 @@ const AddExpense = ({ onClose, onExpenseAdded }) => {
           </motion.div>
         )}
 
-        {/* Form */}
+      
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Amount */}
+         
           <div>
             <label className="block text-white/80 text-sm font-medium mb-2">
               Amount
@@ -234,7 +234,7 @@ const AddExpense = ({ onClose, onExpenseAdded }) => {
             </div>
           </div>
 
-          {/* Category */}
+        
           <div>
             <label className="block text-white/80 text-sm font-medium mb-2">
               Category
@@ -263,7 +263,7 @@ const AddExpense = ({ onClose, onExpenseAdded }) => {
             </div>
           </div>
 
-          {/* Description */}
+        
           <div>
             <label className="block text-white/80 text-sm font-medium mb-2">
               Description
@@ -281,7 +281,7 @@ const AddExpense = ({ onClose, onExpenseAdded }) => {
             </div>
           </div>
 
-          {/* Date */}
+         
           <div>
             <label className="block text-white/80 text-sm font-medium mb-2">
               Date
@@ -298,7 +298,7 @@ const AddExpense = ({ onClose, onExpenseAdded }) => {
             </div>
           </div>
 
-          {/* Type Selection */}
+         
           <div>
             <label className="block text-white/80 text-sm font-medium mb-2">
               Type
@@ -342,7 +342,7 @@ const AddExpense = ({ onClose, onExpenseAdded }) => {
             </div>
           </div>
 
-          {/* Submit Button */}
+                  
           <motion.button
             type="submit"
             disabled={isSubmitting}

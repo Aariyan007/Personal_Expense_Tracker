@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { PlusCircle, TrendingUp, TrendingDown, Target, DollarSign, Calendar, BarChart3, PieChart, Bell, Settings, User, CreditCard, Wallet, ArrowUpRight, ArrowDownRight, CheckCircle, AlertCircle } from 'lucide-react';
 import axios from 'axios';
-import AddExpense from './Addexpense'; // Import the AddExpense component
+girimport AddExpense from './Addexpense'; 
 
 function ExpenseTrackerHome() {
   const [userData, setUserData] = useState({
@@ -26,7 +26,7 @@ function ExpenseTrackerHome() {
   const [aiInsights, setAiInsights] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [showAddExpense, setShowAddExpense] = useState(false); // New state for modal
+  const [showAddExpense, setShowAddExpense] = useState(false); 
 
   useEffect(() => {
     fetchUserData();
@@ -62,7 +62,7 @@ function ExpenseTrackerHome() {
 
       console.log('Making API calls...');
 
-      // Test basic connectivity first
+      
       try {
         console.log('Testing /user/details...');
         const userResponse = await axios.get(`${baseUrl}/user/details`, axiosConfig);
@@ -80,7 +80,7 @@ function ExpenseTrackerHome() {
         setCurrentMonth(monthResponse.data);
       } catch (err) {
         console.error('Monthly summary error:', err.response?.data || err.message);
-        // Don't throw - use fallback data
+        
         setCurrentMonth({
           spent: 0,
           budget: 0,
@@ -122,12 +122,12 @@ function ExpenseTrackerHome() {
     } catch (err) {
       console.error('🚨 Fatal error in fetchUserData:', err);
 
-      // More detailed error information
+      
       if (err.code === 'NETWORK_ERROR') {
         setError('Network error: Cannot connect to server. Is your backend running?');
       } else if (err.response?.status === 401) {
         setError('Authentication failed. Please login again.');
-        localStorage.removeItem('token'); // Clear invalid token
+        localStorage.removeItem('token'); 
       } else if (err.response?.status === 404) {
         setError('API endpoint not found. Please check your backend routes.');
       } else if (err.response?.status >= 500) {
@@ -140,7 +140,7 @@ function ExpenseTrackerHome() {
     }
   };
 
-  // Function to refresh data after adding expense
+  
   const handleExpenseAdded = () => {
     console.log('Expense added, refreshing data...');
     fetchUserData();
@@ -173,7 +173,7 @@ function ExpenseTrackerHome() {
     return { color: 'text-red-400', status: 'Caution' };
   };
 
-  // Animation variants
+  
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -236,7 +236,7 @@ function ExpenseTrackerHome() {
         initial="hidden"
         animate="visible"
       >
-        {/* Welcome Section */}
+        
         <motion.div variants={itemVariants} className="mb-8">
           <h2 className="text-3xl md:text-4xl font-bold mb-2">
             Welcome back, {userData.name || 'User'}! {getGoalIcon(userData.primaryGoal)}
@@ -246,7 +246,7 @@ function ExpenseTrackerHome() {
           </p>
         </motion.div>
 
-        {/* Quick Stats Cards */}
+        
         <motion.div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
           variants={containerVariants}
@@ -317,9 +317,9 @@ function ExpenseTrackerHome() {
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column */}
+          
           <div className="lg:col-span-2 space-y-8">
-            {/* AI Insights */}
+            
             <motion.div variants={itemVariants}>
               <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                 🤖 AI Insights
@@ -350,7 +350,7 @@ function ExpenseTrackerHome() {
               </div>
             </motion.div>
 
-            {/* Category Spending */}
+            
             <motion.div variants={itemVariants}>
               <h3 className="text-xl font-bold mb-4">Category Spending</h3>
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
@@ -382,9 +382,9 @@ function ExpenseTrackerHome() {
             </motion.div>
           </div>
 
-          {/* Right Column */}
+
           <div className="space-y-8">
-            {/* Quick Actions */}
+            
             <motion.div variants={itemVariants}>
               <h3 className="text-xl font-bold mb-4">Quick Actions</h3>
               <div className="space-y-3">
@@ -415,7 +415,7 @@ function ExpenseTrackerHome() {
               </div>
             </motion.div>
 
-            {/* Recent Transactions */}
+            
             <motion.div variants={itemVariants}>
               <h3 className="text-xl font-bold mb-4">Recent Transactions</h3>
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
@@ -452,7 +452,7 @@ function ExpenseTrackerHome() {
         </div>
       </motion.main>
 
-      {/* Add Expense Modal */}
+                  
       {showAddExpense && (
         <AddExpense
           onClose={() => setShowAddExpense(false)}

@@ -18,7 +18,7 @@ const expenseController = {
       const { amount, category, description, date, type = 'expense' } = req.body;
       const userId = req.user.id;
 
-      // Create new expense
+
       const expense = new Expense({
         userId,
         amount: parseFloat(amount),
@@ -52,7 +52,7 @@ const expenseController = {
     }
   },
 
-  // Get user's expenses with filtering and pagination
+
   getExpenses: async (req, res) => {
     try {
       const userId = req.user.id;
@@ -64,10 +64,10 @@ const expenseController = {
         page = 1, 
         limit = 20,
         sortBy = 'date',
-        sortOrder = 'desc'  // Default sort order is descending (newest first)
+        sortOrder = 'desc'  
       } = req.query;
 
-      // Build filter object
+
       const filter = { userId };
       
       if (category) {
@@ -87,11 +87,11 @@ const expenseController = {
       // Calculate pagination
       const skip = (parseInt(page) - 1) * parseInt(limit);
       
-      // Build sort object
+
       const sort = {};
       sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-      // Execute query
+
       const [expenses, totalCount] = await Promise.all([
         Expense.find(filter)
           .sort(sort)
@@ -122,7 +122,6 @@ const expenseController = {
     }
   },
 
-  // Update expense
   updateExpense: async (req, res) => {
     try {
       const errors = validationResult(req);
@@ -138,7 +137,7 @@ const expenseController = {
       const userId = req.user.id;
       const updateData = { ...req.body };
 
-      // Clean and process update data
+
       if (updateData.amount) {
         updateData.amount = parseFloat(updateData.amount);
       }
@@ -180,7 +179,7 @@ const expenseController = {
     }
   },
 
-  // Delete expense
+
   deleteExpense: async (req, res) => {
     try {
       const { id } = req.params;

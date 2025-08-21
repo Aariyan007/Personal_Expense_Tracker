@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const UserData = require('../models/schema'); 
 const Expense = require('../models/ExpenseSchema'); 
 
-// Existing registration code...
+
 module.exports.registerUser = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -74,7 +74,7 @@ module.exports.registerUser = async (req, res) => {
     });
 };
 
-// Existing login code...
+
 module.exports.loginUser = (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -129,7 +129,7 @@ module.exports.loginUser = (req, res) => {
     });
 };
 
-// Existing onboarding...
+
 module.exports.onBoarding = async(req, res) => {
     try {
         const { monthlyIncome, currency, primaryGoal, budgetPreference, expenseCategories } = req.body;
@@ -139,7 +139,7 @@ module.exports.onBoarding = async(req, res) => {
             { email },
             {
                 email,
-                monthlyIncome: parseFloat(monthlyIncome), // Ensure it's a number
+                monthlyIncome: parseFloat(monthlyIncome), 
                 currency,
                 primaryGoal,
                 budgetPreference,
@@ -154,19 +154,19 @@ module.exports.onBoarding = async(req, res) => {
     }
 }
 
-// UPDATED: Get user details with real data
+
 module.exports.getUserDetails = async (req, res) => {
     try {
         const email = req.user.email;
         
-        // Get user data from MongoDB
+
         const userData = await UserData.findOne({ email });
         
         if (!userData) {
             return res.status(404).json({ error: 'User data not found. Please complete onboarding.' });
         }
 
-        // Combine with user info from token
+
         const userDetails = {
             name: req.user.username,
             email: req.user.email,
@@ -184,7 +184,7 @@ module.exports.getUserDetails = async (req, res) => {
     }
 };
 
-// UPDATED: Get monthly summary with real expense calculations
+
 module.exports.getMonthlySummary = async (req, res) => {
     try {
         const email = req.user.email;
@@ -197,12 +197,12 @@ module.exports.getMonthlySummary = async (req, res) => {
             });
         }
 
-        // Get current month date range
+
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-        // Calculate monthly expenses and income from actual transactions
+
         const monthlyExpenses = await Expense.aggregate([
             {
                 $match: {
@@ -232,12 +232,11 @@ module.exports.getMonthlySummary = async (req, res) => {
             }
         });
 
-        // Add base monthly income from user data
+
         const baseIncome = parseFloat(userData.monthlyIncome) || 0;
         const totalIncome = baseIncome + additionalIncome;
 
-        // Calculate budget (you can implement your own logic)
-        // For now, let's assume budget is 80% of income
+
         const budget = totalIncome * 0.8;
         const savings = totalIncome - spent;
 
@@ -257,7 +256,7 @@ module.exports.getMonthlySummary = async (req, res) => {
     }
 };
 
-// UPDATED: Get recent transactions from actual expense data
+
 module.exports.getRecentTransactions = async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 10;
@@ -290,7 +289,7 @@ module.exports.getRecentTransactions = async (req, res) => {
     }
 };
 
-// UPDATED: Get category spending from real expense data
+
 module.exports.getCategorySpending = async (req, res) => {
     try {
         const email = req.user.email;
@@ -303,12 +302,10 @@ module.exports.getCategorySpending = async (req, res) => {
             });
         }
 
-        // Get current month date range
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-        // Get spending by category for current month
         const categorySpending = await Expense.aggregate([
             {
                 $match: {
@@ -328,18 +325,16 @@ module.exports.getCategorySpending = async (req, res) => {
             }
         ]);
 
-        // Create a map of spent amounts
         const spentMap = {};
         categorySpending.forEach(item => {
             spentMap[item._id] = item.spent;
         });
 
-        // Calculate budget per category (simple equal distribution for now)
+
         const totalBudget = (parseFloat(userData.monthlyIncome) || 0) * 0.8;
         const budgetPerCategory = userData.expenseCategories.length > 0 ? 
             totalBudget / userData.expenseCategories.length : 0;
 
-        // Color palette for categories
         const colors = [
             'bg-gradient-to-r from-purple-500 to-pink-500',
             'bg-gradient-to-r from-blue-500 to-cyan-500',
@@ -367,7 +362,6 @@ module.exports.getCategorySpending = async (req, res) => {
     }
 };
 
-// UPDATED: Generate AI insights based on real spending data
 module.exports.getAIInsights = async (req, res) => {
     try {
         const email = req.user.email;
@@ -380,12 +374,10 @@ module.exports.getAIInsights = async (req, res) => {
             });
         }
 
-        // Get current month date range
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-        // Get monthly spending data
         const monthlyExpenses = await Expense.aggregate([
             {
                 $match: {
@@ -412,7 +404,6 @@ module.exports.getAIInsights = async (req, res) => {
         const totalSpent = monthlyExpenses.length > 0 ? monthlyExpenses[0].totalSpent : 0;
         const transactionCount = monthlyExpenses.length > 0 ? monthlyExpenses[0].transactionCount : 0;
 
-        // Generate insights based on spending patterns
         if (totalSpent > budget) {
             insights.push({
                 type: 'warning',
@@ -435,7 +426,6 @@ module.exports.getAIInsights = async (req, res) => {
             });
         }
 
-        // Savings insight
         const savings = monthlyIncome - totalSpent;
         if (savings > monthlyIncome * 0.2) {
             insights.push({
@@ -445,7 +435,6 @@ module.exports.getAIInsights = async (req, res) => {
             });
         }
 
-        // Goal-based insights
         if (userData.primaryGoal === 'save' && savings > 0) {
             insights.push({
                 type: 'tip',
@@ -465,7 +454,7 @@ module.exports.getAIInsights = async (req, res) => {
     }
 };
 
-// Existing endpoints...
+
 module.exports.getProfile = (req, res) => {
     res.status(200).json({ user: req.user });
 };
