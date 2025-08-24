@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const UserData = require('../models/schema'); 
 const Expense = require('../models/ExpenseSchema'); 
-
+const Goal = require('../models/GoalSchema');
 
 module.exports.registerUser = async (req, res) => {
     const errors = validationResult(req);
@@ -496,3 +496,368 @@ module.exports.getName = async(req,res) =>{
         res.status(200).json({username})
     })
 };
+
+module.exports.createGoal = async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Validation failed',
+          details: errors.array()
+        });
+      }
+  
+      const { title, description, targetAmount, currentAmount, category, targetDate, priority } = req.body;
+      const userId = req.user.id;
+  
+      // Check if target date is in the future
+      if (new Date(targetDate) <= new Date()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Target date must be in the future'
+        });
+      }
+  
+      const goal = new Goal({
+        userId,
+        title: title.trim(),
+        description: description?.trim() || '',
+        targetAmount: parseFloat(targetAmount),
+        currentAmount: parseFloat(currentAmount) || 0,
+        category: category.toLowerCase().trim(),
+        targetDate: new Date(targetDate),
+        priority: priority?.toLowerCase() || 'medium'
+      });
+  
+      // Add initial progress entry if current amount > 0
+      if (goal.currentAmount > 0) {
+        goal.progressHistory.push({
+          amount: goal.currentAmount,
+          note: 'Initial amount'
+        });
+      }
+  
+      await goal.save();
+  
+      res.status(201).json({
+        success: true,
+        message: 'Goal created successfully',
+        goal: {
+          id: goal._id,
+          title: goal.title,
+          targetAmount: goal.targetAmount,
+          currentAmount: goal.currentAmount,
+          category: goal.category,
+          targetDate: goal.targetDate,
+          priority: goal.priority,
+          progressPercentage: goal.progressPercentage,
+          remainingAmount: goal.remainingAmount,
+          daysRemaining: goal.daysRemaining,
+          status: goal.status
+        }
+      });
+  
+    } catch (error) {
+      console.error('Error creating goal:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to create goal'
+      });
+    }
+  };
+  
+
+  module.exports.getGoals = async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const { 
+        status = 'active',
+        category,
+        priority,
+        sortBy = 'targetDate',
+        sortOrder = 'asc',
+        page = 1,
+        limit = 10
+      } = req.query;
+  
+      const filter = { userId };
+      
+      if (status !== 'all') {
+        filter.status = status;
+      }
+      if (category) {
+        filter.category = category.toLowerCase();
+      }
+      if (priority) {
+        filter.priority = priority.toLowerCase();
+      }
+  
+      const sort = {};
+      sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+  
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+  
+      const [goals, totalCount] = await Promise.all([
+        Goal.find(filter)
+          .sort(sort)
+          .skip(skip)
+          .limit(parseInt(limit))
+          .lean(),
+        Goal.countDocuments(filter)
+      ]);
+  
+      // Add virtual fields manually since we used .lean()
+      const goalsWithVirtuals = goals.map(goal => ({
+        ...goal,
+        progressPercentage: Math.min((goal.currentAmount / goal.targetAmount) * 100, 100),
+        remainingAmount: Math.max(goal.targetAmount - goal.currentAmount, 0),
+        daysRemaining: Math.ceil((new Date(goal.targetDate) - new Date()) / (1000 * 60 * 60 * 24))
+      }));
+  
+      res.json({
+        success: true,
+        goals: goalsWithVirtuals,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(totalCount / parseInt(limit)),
+          totalCount,
+          hasNext: skip + goals.length < totalCount,
+          hasPrev: parseInt(page) > 1
+        }
+      });
+  
+    } catch (error) {
+      console.error('Error fetching goals:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch goals'
+      });
+    }
+  };
+  
+
+  module.exports.getGoalById = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user.id;
+  
+      const goal = await Goal.findOne({ _id: id, userId });
+  
+      if (!goal) {
+        return res.status(404).json({
+          success: false,
+          error: 'Goal not found'
+        });
+      }
+  
+      res.json({
+        success: true,
+        goal: {
+          id: goal._id,
+          title: goal.title,
+          description: goal.description,
+          targetAmount: goal.targetAmount,
+          currentAmount: goal.currentAmount,
+          category: goal.category,
+          targetDate: goal.targetDate,
+          priority: goal.priority,
+          status: goal.status,
+          progressPercentage: goal.progressPercentage,
+          remainingAmount: goal.remainingAmount,
+          daysRemaining: goal.daysRemaining,
+          progressHistory: goal.progressHistory,
+          createdAt: goal.createdAt,
+          updatedAt: goal.updatedAt
+        }
+      });
+  
+    } catch (error) {
+      console.error('Error fetching goal:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch goal'
+      });
+    }
+  };
+  
+
+  module.exports.updateGoal = async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Validation failed',
+          details: errors.array()
+        });
+      }
+  
+      const { id } = req.params;
+      const userId = req.user.id;
+      const updateData = { ...req.body };
+  
+      // Process update data
+      if (updateData.title) {
+        updateData.title = updateData.title.trim();
+      }
+      if (updateData.description) {
+        updateData.description = updateData.description.trim();
+      }
+      if (updateData.targetAmount) {
+        updateData.targetAmount = parseFloat(updateData.targetAmount);
+      }
+      if (updateData.currentAmount !== undefined) {
+        updateData.currentAmount = parseFloat(updateData.currentAmount);
+      }
+      if (updateData.category) {
+        updateData.category = updateData.category.toLowerCase().trim();
+      }
+      if (updateData.priority) {
+        updateData.priority = updateData.priority.toLowerCase();
+      }
+      if (updateData.targetDate) {
+        const newTargetDate = new Date(updateData.targetDate);
+        if (newTargetDate <= new Date()) {
+          return res.status(400).json({
+            success: false,
+            error: 'Target date must be in the future'
+          });
+        }
+        updateData.targetDate = newTargetDate;
+      }
+  
+      const goal = await Goal.findOneAndUpdate(
+        { _id: id, userId },
+        updateData,
+        { new: true, runValidators: true }
+      );
+  
+      if (!goal) {
+        return res.status(404).json({
+          success: false,
+          error: 'Goal not found'
+        });
+      }
+  
+      res.json({
+        success: true,
+        message: 'Goal updated successfully',
+        goal: {
+          id: goal._id,
+          title: goal.title,
+          description: goal.description,
+          targetAmount: goal.targetAmount,
+          currentAmount: goal.currentAmount,
+          category: goal.category,
+          targetDate: goal.targetDate,
+          priority: goal.priority,
+          status: goal.status,
+          progressPercentage: goal.progressPercentage,
+          remainingAmount: goal.remainingAmount,
+          daysRemaining: goal.daysRemaining
+        }
+      });
+  
+    } catch (error) {
+      console.error('Error updating goal:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update goal'
+      });
+    }
+  };
+  
+
+  module.exports.deleteGoal = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user.id;
+  
+      const goal = await Goal.findOneAndDelete({ _id: id, userId });
+  
+      if (!goal) {
+        return res.status(404).json({
+          success: false,
+          error: 'Goal not found'
+        });
+      }
+  
+      res.json({
+        success: true,
+        message: 'Goal deleted successfully'
+      });
+  
+    } catch (error) {
+      console.error('Error deleting goal:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to delete goal'
+      });
+    }
+  };
+  
+
+  module.exports.updateGoalProgress = async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Validation failed',
+          details: errors.array()
+        });
+      }
+  
+      const { id } = req.params;
+      const { amount, note } = req.body;
+      const userId = req.user.id;
+  
+      const goal = await Goal.findOne({ _id: id, userId });
+  
+      if (!goal) {
+        return res.status(404).json({
+          success: false,
+          error: 'Goal not found'
+        });
+      }
+  
+      if (goal.status !== 'active') {
+        return res.status(400).json({
+          success: false,
+          error: 'Cannot update progress for inactive goals'
+        });
+      }
+  
+      // Add to current amount
+      goal.currentAmount = Math.max(parseFloat(amount), 0);
+  
+      // Add progress history entry
+      goal.progressHistory.push({
+        amount: parseFloat(amount),
+        note: note?.trim() || ''
+      });
+  
+      await goal.save();
+  
+      res.json({
+        success: true,
+        message: goal.status === 'completed' ? 'Congratulations! Goal completed!' : 'Progress updated successfully',
+        goal: {
+          id: goal._id,
+          currentAmount: goal.currentAmount,
+          progressPercentage: goal.progressPercentage,
+          remainingAmount: goal.remainingAmount,
+          status: goal.status,
+          completedAt: goal.completedAt
+        }
+      });
+  
+    } catch (error) {
+      console.error('Error updating goal progress:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update goal progress'
+      });
+    }
+  };

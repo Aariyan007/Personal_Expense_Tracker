@@ -5,9 +5,14 @@ import axios from 'axios';
 import AddExpense from './Addexpense';
 import ViewAnalytics from './ViewAnalytics';
 import { useNavigate } from 'react-router-dom';
+import SetGoal from './SetGoal';
+import GoalsOverviewSection from './GoalsOverviewSection';
+import ViewGoals from './ViewGoals';
 
 function ExpenseTrackerHome() {
   const navigate = useNavigate();
+  const [showSetGoal, setShowSetGoal] = useState(false);
+  const [showViewGoals, setShowViewGoals] = useState(false);
   const [userData, setUserData] = useState({
     name: '',
     monthlyIncome: 0,
@@ -144,7 +149,25 @@ function ExpenseTrackerHome() {
     }
   };
 
+  const handleCreateGoal = () => {
+    setShowSetGoal(true);
+  };
+  const handleViewAllGoals = () => {
+    setShowViewGoals(true);
+  };
 
+  const handleEditGoal = (goal) => {
+    console.log('Edit goal:', goal);
+    setShowViewGoals(false);
+    setShowSetGoal(true); 
+  };
+
+
+  const handleGoalSet = (goalData) => {
+    console.log('Goal created:', goalData);
+
+    fetchUserData();
+  };
   const handleExpenseAdded = () => {
     console.log('Expense added, refreshing data...');
     fetchUserData();
@@ -353,6 +376,11 @@ function ExpenseTrackerHome() {
                 )}
               </div>
             </motion.div>
+            <GoalsOverviewSection
+              userData={userData}
+              onViewAllGoals={handleViewAllGoals}
+              onCreateGoal={handleCreateGoal}
+            />
 
 
             <motion.div variants={itemVariants}>
@@ -411,6 +439,7 @@ function ExpenseTrackerHome() {
 
                 <motion.button
                   whileHover={cardHover}
+                  onClick={() => setShowSetGoal(true)} 
                   className="w-full bg-white/10 backdrop-blur-md rounded-xl p-4 flex items-center gap-3 border border-white/20 hover:bg-white/20 transition-all"
                 >
                   <Target className="w-5 h-5" />
@@ -465,6 +494,26 @@ function ExpenseTrackerHome() {
       )}
       {showAnalytics && (
         <ViewAnalytics onClose={() => setShowAnalytics(false)} />
+      )}
+      {showSetGoal && (
+        <SetGoal
+          onClose={() => setShowSetGoal(false)}
+          onGoalSet={handleGoalSet}
+        />
+      )}
+      {showSetGoal && (
+        <SetGoal
+          onClose={() => setShowSetGoal(false)}
+          onGoalSet={handleGoalSet}
+        />
+      )}
+
+      {showViewGoals && (
+        <ViewGoals
+          onClose={() => setShowViewGoals(false)}
+          onCreateGoal={handleCreateGoal}
+          onEditGoal={handleEditGoal}
+        />
       )}
     </div>
   );

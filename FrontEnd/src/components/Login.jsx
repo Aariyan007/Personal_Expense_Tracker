@@ -102,7 +102,7 @@ const Login = () => {
         }
       }
 
-      // console.log('Form submitted:', formData);
+
     } catch (error) {
         navigate('/login');
         console.error('Login error:', error);
@@ -131,10 +131,10 @@ const Login = () => {
         variants={backgroundVariants}
         animate="animate"
       >
-        {/* Floating Particles */}
+
         {floatingParticles}
 
-        {/* Gradient Orbs */}
+
         <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-purple-500/30 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
 
@@ -144,7 +144,7 @@ const Login = () => {
           initial="hidden"
           animate="visible"
         >
-          {/* Logo/Brand */}
+
           <motion.div
             className="text-center mb-8"
             variants={itemVariants}
@@ -160,19 +160,18 @@ const Login = () => {
             <p className="text-white/70">Sign in to your account</p>
           </motion.div>
 
-          {/* Form Container */}
+
           <motion.div
             className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-white/20"
             variants={itemVariants}
             whileHover={{ y: -5 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
-            {/* Toggle Buttons */}
-            {/* <div className="flex bg-white/10 rounded-2xl p-1 mb-6"> */}
+     
 
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Email Input */}
+
               <motion.div
                 className="relative"
                 variants={inputVariants}
@@ -190,7 +189,7 @@ const Login = () => {
                 />
               </motion.div>
 
-              {/* Password Input */}
+
               <motion.div
                 className="relative"
                 variants={inputVariants}
@@ -216,7 +215,7 @@ const Login = () => {
                 </motion.button>
               </motion.div>
 
-              {/* Remember Me & Forgot Password */}
+
               <div className="flex items-center justify-between text-sm">
                 <label className="flex items-center text-white/70">
                   <input type="checkbox" className="mr-2 rounded" />
@@ -231,7 +230,7 @@ const Login = () => {
                 </motion.a>
               </div>
 
-              {/* Submit Button */}
+
               <motion.button
                 type="submit"
                 className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-4 px-6 rounded-2xl shadow-lg flex items-center justify-center group transition-all"
@@ -247,7 +246,7 @@ const Login = () => {
                 </motion.div>
               </motion.button>
 
-              {/* Divider */}
+
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-white/20"></div>
@@ -257,7 +256,7 @@ const Login = () => {
                 </div>
               </div>
 
-              {/* Social Login */}
+
               <div className="flex items-center justify-center">
                 <motion.button
                   type="button"
@@ -276,7 +275,7 @@ const Login = () => {
               </div>
             </form>
 
-            {/* Sign Up Link */}
+
             <motion.div
               className="text-center mt-6"
               variants={itemVariants}
@@ -294,7 +293,7 @@ const Login = () => {
             </motion.div>
           </motion.div>
 
-          {/* Footer */}
+
           <motion.div
             className="text-center mt-8 text-white/50 text-sm"
             variants={itemVariants}

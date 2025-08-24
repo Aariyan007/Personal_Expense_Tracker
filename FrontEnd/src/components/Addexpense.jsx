@@ -26,11 +26,11 @@ const AddExpense = ({ onClose, onExpenseAdded }) => {
     try {
       const token = localStorage.getItem('token');
       const baseUrl = import.meta.env.VITE_BASE_URL;
-      
+
       const response = await axios.get(`${baseUrl}/user/details`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       setUserCategories(response.data.expenseCategories || []);
       setCurrency(response.data.currency || 'USD');
     } catch (err) {
@@ -49,7 +49,7 @@ const AddExpense = ({ onClose, onExpenseAdded }) => {
       ...prev,
       [name]: value
     }));
-    
+
     if (error) setError('');
   };
 
@@ -71,28 +71,28 @@ const AddExpense = ({ onClose, onExpenseAdded }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     setIsSubmitting(true);
     setError('');
 
     try {
       const token = localStorage.getItem('token');
       const baseUrl = import.meta.env.VITE_BASE_URL;
-      
+
       const response = await axios.post(`${baseUrl}/user/expenses`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       if (response.data.success) {
         setShowSuccess(true);
-        
-     
+
+
         if (onExpenseAdded) {
           onExpenseAdded();
         }
-        
+
 
         setTimeout(() => {
           setShowSuccess(false);
@@ -109,7 +109,7 @@ const AddExpense = ({ onClose, onExpenseAdded }) => {
 
   const categoryOptions = [
     'Food & Dining',
-    'Transportation', 
+    'Transportation',
     'Shopping',
     'Entertainment',
     'Bills & Utilities',
@@ -142,8 +142,8 @@ const AddExpense = ({ onClose, onExpenseAdded }) => {
 
   const successVariants = {
     hidden: { opacity: 0, scale: 0.8 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       scale: 1,
       transition: {
         type: 'spring',
@@ -185,7 +185,7 @@ const AddExpense = ({ onClose, onExpenseAdded }) => {
         exit="exit"
         className="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 rounded-3xl p-6 w-full max-w-md border border-white/20"
       >
-        
+
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={onClose}
@@ -197,7 +197,7 @@ const AddExpense = ({ onClose, onExpenseAdded }) => {
           <div className="w-10" /> {/* Spacer */}
         </div>
 
-      
+
         {error && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -209,9 +209,9 @@ const AddExpense = ({ onClose, onExpenseAdded }) => {
           </motion.div>
         )}
 
-      
+
         <form onSubmit={handleSubmit} className="space-y-4">
-         
+
           <div>
             <label className="block text-white/80 text-sm font-medium mb-2">
               Amount
@@ -234,7 +234,7 @@ const AddExpense = ({ onClose, onExpenseAdded }) => {
             </div>
           </div>
 
-        
+
           <div>
             <label className="block text-white/80 text-sm font-medium mb-2">
               Category
@@ -263,7 +263,7 @@ const AddExpense = ({ onClose, onExpenseAdded }) => {
             </div>
           </div>
 
-        
+
           <div>
             <label className="block text-white/80 text-sm font-medium mb-2">
               Description
@@ -281,7 +281,7 @@ const AddExpense = ({ onClose, onExpenseAdded }) => {
             </div>
           </div>
 
-         
+
           <div>
             <label className="block text-white/80 text-sm font-medium mb-2">
               Date
@@ -298,7 +298,7 @@ const AddExpense = ({ onClose, onExpenseAdded }) => {
             </div>
           </div>
 
-         
+
           <div>
             <label className="block text-white/80 text-sm font-medium mb-2">
               Type
@@ -313,15 +313,14 @@ const AddExpense = ({ onClose, onExpenseAdded }) => {
                   onChange={handleInputChange}
                   className="sr-only"
                 />
-                <div className={`p-3 rounded-xl border-2 text-center cursor-pointer transition-all ${
-                  formData.type === 'expense'
+                <div className={`p-3 rounded-xl border-2 text-center cursor-pointer transition-all ${formData.type === 'expense'
                     ? 'border-red-400 bg-red-500/20 text-red-400'
                     : 'border-white/20 bg-white/10 text-white/60 hover:border-white/40'
-                }`}>
+                  }`}>
                   <div className="text-sm font-medium">💸 Expense</div>
                 </div>
               </label>
-              
+
               <label className="flex-1">
                 <input
                   type="radio"
@@ -331,18 +330,17 @@ const AddExpense = ({ onClose, onExpenseAdded }) => {
                   onChange={handleInputChange}
                   className="sr-only"
                 />
-                <div className={`p-3 rounded-xl border-2 text-center cursor-pointer transition-all ${
-                  formData.type === 'income'
+                <div className={`p-3 rounded-xl border-2 text-center cursor-pointer transition-all ${formData.type === 'income'
                     ? 'border-green-400 bg-green-500/20 text-green-400'
                     : 'border-white/20 bg-white/10 text-white/60 hover:border-white/40'
-                }`}>
+                  }`}>
                   <div className="text-sm font-medium">💰 Income</div>
                 </div>
               </label>
             </div>
           </div>
 
-                  
+
           <motion.button
             type="submit"
             disabled={isSubmitting}
