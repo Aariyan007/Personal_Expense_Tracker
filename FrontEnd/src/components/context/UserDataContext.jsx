@@ -7,6 +7,7 @@ const userContext = ({children}) =>{
     const [userData,setuserData] = useState({
         email: "",
         username:"",
+        currency: "USD" // Add default currency
     });
 
     return (

@@ -23,7 +23,12 @@ const UserProtectedWrapper = ({ children }) => {
         })
         .then((response) => {
             if(response.status === 200){
-                setuserData(response.data.user); 
+                // Ensure currency property exists, fallback to USD if not provided
+                const userDataWithCurrency = {
+                    ...response.data.user,
+                    currency: response.data.user.currency || 'USD'
+                };
+                setuserData(userDataWithCurrency); 
                 setIsLoading(false);
             }
         })

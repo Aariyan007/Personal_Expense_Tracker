@@ -125,18 +125,7 @@ const Landing = () => {
                 </div>
 
 
-                <style jsx>{`
-          @keyframes gradientShift {
-            0%, 100% { 
-              background: linear-gradient(45deg, transparent 30%, rgba(139, 92, 246, 0.1) 50%, transparent 70%);
-              transform: translateX(-100%);
-            }
-            50% { 
-              background: linear-gradient(45deg, transparent 30%, rgba(59, 130, 246, 0.1) 50%, transparent 70%);
-              transform: translateX(100%);
-            }
-          }
-        `}</style>
+                {/* CSS moved to index.css for React 19 compatibility */}
 
                 <div className="relative z-10 text-center max-w-5xl mx-auto px-6">
 

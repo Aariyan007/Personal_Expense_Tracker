@@ -2,10 +2,12 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Menu, X, Bell, Settings, User, Wallet, Search } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 
 const navItems = ['Dashboard', 'Transactions', 'AI-PLANNER', 'Settings'];
 
 const Navbar = () => {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   
 
@@ -103,24 +105,24 @@ const Navbar = () => {
               }}
             >
               {navItems.map((item, index) => (
-                <motion.a
+                <motion.div
                   key={index}
-                  href={`#${item.toLowerCase()}`}
-                  className="relative text-white/90 text-sm font-medium px-6 py-3 rounded-xl hover:text-white transition-all duration-300 group overflow-hidden"
                   variants={itemVariants}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
-                  <div className="absolute inset-0 bg-white/5 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm"></div>
-                  
-
-                  <span className="relative z-10 uppercase tracking-wider">{item}</span>
-                  
-
-                  <span className="absolute left-4 right-4 bottom-1 h-0.5 bg-gradient-to-r from-purple-400 to-indigo-400 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-full"></span>
-                </motion.a>
+                  <Link
+                    to={item === "Dashboard" ? "/home" : `/${item.toLowerCase()}`}
+                    className="relative text-white/90 text-sm font-medium px-6 py-3 rounded-xl hover:text-white transition-all duration-300 group overflow-hidden block"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
+                    <div className="absolute inset-0 bg-white/5 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm"></div>
+                    
+                    <span className="relative z-10 uppercase tracking-wider">{item}</span>
+                    
+                    <span className="absolute left-4 right-4 bottom-1 h-0.5 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-full"></span>
+                  </Link>
+                </motion.div>
               ))}
             </motion.div>
 
@@ -250,17 +252,7 @@ const Navbar = () => {
       )}
 
       {/* Custom CSS for additional animations thanks gpt*/}
-      <style jsx>{`
-        .animation-delay-2s {
-          animation-delay: 2s;
-        }
-        
-        @supports (backdrop-filter: blur(40px)) {
-          .backdrop-blur-2xl {
-            backdrop-filter: blur(40px);
-          }
-        }
-      `}</style>
+      {/* CSS moved to index.css for React 19 compatibility */}
     </motion.div>
   );
 };
