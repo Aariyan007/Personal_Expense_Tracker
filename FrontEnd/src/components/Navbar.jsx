@@ -4,24 +4,25 @@ import { Menu, X, Bell, Settings, User, Wallet, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
+
 const navItems = ['Dashboard', 'Transactions', 'AI-PLANNER', 'Settings'];
 
 const Navbar = () => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  
+
 
   const navbarVariants = {
     hidden: { y: -100, opacity: 0 },
-    visible: { 
-      y: 0, 
-      opacity: 1, 
-      transition: { 
-        type: "spring", 
-        stiffness: 100, 
-        damping: 20, 
-        delay: 0.2 
-      } 
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 20,
+        delay: 0.2
+      }
     },
   };
 
@@ -34,21 +35,21 @@ const Navbar = () => {
 
   const mobileMenuVariants = {
     hidden: { opacity: 0, y: -50, scale: 0.95 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
+    visible: {
+      opacity: 1,
+      y: 0,
       scale: 1,
-      transition: { 
-        type: "spring", 
-        stiffness: 120, 
-        damping: 20 
-      } 
+      transition: {
+        type: "spring",
+        stiffness: 120,
+        damping: 20
+      }
     },
-    exit: { 
-      opacity: 0, 
-      y: -50, 
+    exit: {
+      opacity: 0,
+      y: -50,
       scale: 0.95,
-      transition: { duration: 0.3 } 
+      transition: { duration: 0.3 }
     },
   };
 
@@ -64,11 +65,11 @@ const Navbar = () => {
 
         <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-transparent to-indigo-500/10"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent"></div>
-        
+
 
         <div className="absolute top-0 left-1/4 w-32 h-32 bg-purple-500/20 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse"></div>
         <div className="absolute top-0 right-1/4 w-24 h-24 bg-indigo-500/20 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse animation-delay-2s"></div>
-        
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
 
@@ -112,14 +113,20 @@ const Navbar = () => {
                   whileTap={{ scale: 0.95 }}
                 >
                   <Link
-                    to={item === "Dashboard" ? "/home" : `/${item.toLowerCase()}`}
+                    to={
+                      item === "Dashboard"
+                        ? "/home"
+                        : item === "AI-PLANNER"
+                          ? "/aiplanner"
+                          : `/${item.toLowerCase()}`
+                    }
                     className="relative text-white/90 text-sm font-medium px-6 py-3 rounded-xl hover:text-white transition-all duration-300 group overflow-hidden block"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
                     <div className="absolute inset-0 bg-white/5 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm"></div>
-                    
+
                     <span className="relative z-10 uppercase tracking-wider">{item}</span>
-                    
+
                     <span className="absolute left-4 right-4 bottom-1 h-0.5 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-full"></span>
                   </Link>
                 </motion.div>
@@ -202,7 +209,7 @@ const Navbar = () => {
 
           <div className="absolute inset-0 bg-gradient-to-b from-purple-500/10 to-indigo-500/10"></div>
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-white/5 to-transparent"></div>
-          
+
           <div className="relative space-y-2 py-6 px-6">
             {navItems.map((item, index) => (
               <motion.a
@@ -210,8 +217,8 @@ const Navbar = () => {
                 href={`#${item.toLowerCase()}`}
                 className="block text-base font-medium py-4 px-6 rounded-xl hover:bg-white/10 transition-all duration-300 border border-transparent hover:border-white/20 backdrop-blur-sm group"
                 initial={{ opacity: 0, x: -20 }}
-                animate={{ 
-                  opacity: 1, 
+                animate={{
+                  opacity: 1,
                   x: 0,
                   transition: { delay: index * 0.1 }
                 }}
@@ -230,7 +237,7 @@ const Navbar = () => {
                 </div>
               </motion.a>
             ))}
-            
+
 
             <motion.div
               className="mt-6 pt-6 border-t border-white/10"

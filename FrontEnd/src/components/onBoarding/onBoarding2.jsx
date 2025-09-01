@@ -79,7 +79,7 @@ function OnboardingStep2({ onNext, onBack }) {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/user/onboarding-2`, userDetails, {
+      const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/users/onboarding-2`, userDetails, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`

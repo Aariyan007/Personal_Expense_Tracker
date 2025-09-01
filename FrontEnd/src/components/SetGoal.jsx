@@ -178,7 +178,6 @@ function SetGoal({ onClose, onGoalSet }) {
         exit="exit"
         className="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-white/20"
       >
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <motion.div variants={itemVariants} className="flex items-center gap-3">
             <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
@@ -200,7 +199,6 @@ function SetGoal({ onClose, onGoalSet }) {
           </motion.button>
         </div>
 
-        {/* Progress Bar */}
         <motion.div variants={itemVariants} className="mb-8">
           <div className="w-full bg-white/10 rounded-full h-2">
             <motion.div
@@ -213,7 +211,6 @@ function SetGoal({ onClose, onGoalSet }) {
         </motion.div>
 
         <AnimatePresence mode="wait">
-          {/* Step 1: Goal Category & Basic Info */}
           {step === 1 && (
             <motion.div
               key="step1"
@@ -270,7 +267,6 @@ function SetGoal({ onClose, onGoalSet }) {
             </motion.div>
           )}
 
-          {/* Step 2: Financial Details */}
           {step === 2 && (
             <motion.div
               key="step2"
@@ -327,7 +323,6 @@ function SetGoal({ onClose, onGoalSet }) {
                 </div>
               </div>
 
-              {/* Progress Preview */}
               {formData.targetAmount && (
                 <div className="bg-white/10 rounded-xl p-6 border border-white/20">
                   <h4 className="text-white font-semibold mb-4">Progress Preview</h4>
@@ -354,7 +349,6 @@ function SetGoal({ onClose, onGoalSet }) {
             </motion.div>
           )}
 
-          {/* Step 3: Priority & Confirmation */}
           {step === 3 && (
             <motion.div
               key="step3"
@@ -389,7 +383,6 @@ function SetGoal({ onClose, onGoalSet }) {
                 </div>
               </div>
 
-              {/* Goal Summary */}
               <div className="bg-gradient-to-r from-purple-500/20 to-indigo-600/20 rounded-xl p-6 border border-purple-500/30">
                 <h4 className="text-white font-semibold mb-4 flex items-center gap-2">
                   <Star className="w-5 h-5 text-yellow-400" />
@@ -436,8 +429,7 @@ function SetGoal({ onClose, onGoalSet }) {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Action Buttons */}
+                
         <motion.div variants={itemVariants} className="flex gap-4 mt-8">
           {step > 1 && (
             <motion.button

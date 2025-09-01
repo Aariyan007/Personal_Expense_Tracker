@@ -7,7 +7,7 @@ import {
   ArrowUp, ArrowDown, Eye, Play, Pause, RotateCcw
 } from 'lucide-react';
 import axios from 'axios';
-// Note: This component expects axios to be available in your project
+
 
 function ViewGoals({ onClose, onEditGoal, onCreateGoal }) {
   const [goals, setGoals] = useState([]);
@@ -94,7 +94,7 @@ function ViewGoals({ onClose, onEditGoal, onCreateGoal }) {
 
       let goalsData = response.data.goals || [];
 
-      // Client-side search filter
+
       if (filters.search) {
         goalsData = goalsData.filter(goal => 
           goal.title.toLowerCase().includes(filters.search.toLowerCase()) ||
@@ -217,7 +217,7 @@ function ViewGoals({ onClose, onEditGoal, onCreateGoal }) {
         exit="hidden"
         className="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 rounded-2xl p-6 max-w-6xl w-full max-h-[90vh] overflow-hidden border border-white/20"
       >
-        {/* Header */}
+                                                
         <div className="flex items-center justify-between mb-6">
           <motion.div variants={itemVariants} className="flex items-center gap-3">
             <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
@@ -253,7 +253,7 @@ function ViewGoals({ onClose, onEditGoal, onCreateGoal }) {
           </div>
         </div>
 
-        {/* Filters */}
+
         <motion.div variants={itemVariants} className="mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">
@@ -307,7 +307,7 @@ function ViewGoals({ onClose, onEditGoal, onCreateGoal }) {
           </div>
         </motion.div>
 
-        {/* Goals List */}
+
         <div className="overflow-y-auto max-h-[60vh]">
           {isLoading ? (
             <div className="flex justify-center items-center h-40">
@@ -397,7 +397,7 @@ function ViewGoals({ onClose, onEditGoal, onCreateGoal }) {
                       </div>
                     </div>
 
-                    {/* Progress Bar */}
+
                     <div className="mb-4">
                       <div className="flex justify-between text-sm mb-2">
                         <span className="text-blue-200">
@@ -425,7 +425,7 @@ function ViewGoals({ onClose, onEditGoal, onCreateGoal }) {
                       </div>
                     </div>
 
-                    {/* Goal Details */}
+
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-blue-200">Target Date:</span>
@@ -456,7 +456,7 @@ function ViewGoals({ onClose, onEditGoal, onCreateGoal }) {
         </div>
       </motion.div>
 
-      {/* Progress Update Modal */}
+
       <AnimatePresence>
         {showProgressModal && selectedGoal && (
           <motion.div

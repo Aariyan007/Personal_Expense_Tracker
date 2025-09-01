@@ -74,7 +74,7 @@ function ExpenseTrackerHome() {
 
       try {
         console.log('Testing /user/details...');
-        const userResponse = await axios.get(`${baseUrl}/user/details`, axiosConfig);
+        const userResponse = await axios.get(`${baseUrl}/api/users/details`, axiosConfig);
         console.log('User details response:', userResponse.data);
         setUserData(userResponse.data);
       } catch (err) {
@@ -84,7 +84,7 @@ function ExpenseTrackerHome() {
 
       try {
         console.log('Testing /user/monthly-summary...');
-        const monthResponse = await axios.get(`${baseUrl}/user/monthly-summary`, axiosConfig);
+        const monthResponse = await axios.get(`${baseUrl}/api/users/monthly-summary`, axiosConfig);
         console.log('Monthly summary response:', monthResponse.data);
         setCurrentMonth(monthResponse.data);
       } catch (err) {
@@ -100,7 +100,7 @@ function ExpenseTrackerHome() {
 
       try {
         console.log('Testing /user/transactions/recent...');
-        const transResponse = await axios.get(`${baseUrl}/user/transactions/recent`, axiosConfig);
+        const transResponse = await axios.get(`${baseUrl}/api/users/transactions/recent`, axiosConfig);
         console.log('Transactions response:', transResponse.data);
         setRecentTransactions(transResponse.data);
       } catch (err) {
@@ -110,7 +110,7 @@ function ExpenseTrackerHome() {
 
       try {
         console.log('Testing /user/category-spending...');
-        const categoryResponse = await axios.get(`${baseUrl}/user/category-spending`, axiosConfig);
+        const categoryResponse = await axios.get(`${baseUrl}/api/users/category-spending`, axiosConfig);
         console.log('Category spending response:', categoryResponse.data);
         setCategorySpending(categoryResponse.data);
       } catch (err) {
@@ -120,7 +120,7 @@ function ExpenseTrackerHome() {
 
       try {
         console.log('Testing /user/ai-insights...');
-        const insightsResponse = await axios.get(`${baseUrl}/user/ai-insights`, axiosConfig);
+        const insightsResponse = await axios.get(`${baseUrl}/api/users/ai-insights`, axiosConfig);
         console.log('AI insights response:', insightsResponse.data);
         setAiInsights(insightsResponse.data);
       } catch (err) {
@@ -337,7 +337,7 @@ function ExpenseTrackerHome() {
               </span>
             </div>
             <h3 className="text-2xl font-bold mb-1">
-              {getCurrencySymbol(userData.currency)}{Math.max(0, currentMonth.budget - currentMonth.spent).toLocaleString()}
+              {getCurrencySymbol(userData.currency)}{Math.max(0, currentMonth.income - currentMonth.spent).toLocaleString()}
             </h3>
             <p className="text-blue-200 text-sm">Remaining budget</p>
           </motion.div>

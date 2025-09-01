@@ -2,12 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Target, TrendingUp, Calendar, Eye, Plus, 
-  CheckCircle, Clock, AlertTriangle, ArrowRight 
+  CheckCircle, Clock, AlertTriangle, ArrowRight, 
+  Check, X, Edit3 
 } from 'lucide-react';
 
 function GoalsOverviewSection({ userData, onViewAllGoals, onCreateGoal }) {
   const [goals, setGoals] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [editingGoal, setEditingGoal] = useState(null);
+  const [editValue, setEditValue] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
@@ -38,7 +42,6 @@ function GoalsOverviewSection({ userData, onViewAllGoals, onCreateGoal }) {
       const token = localStorage.getItem('token');
       const baseUrl = import.meta.env.VITE_BASE_URL;
 
-      // Note: This expects axios to be available in your project
       const response = await fetch(`${baseUrl}/user/goals?status=all&limit=5&sortBy=targetDate&sortOrder=asc`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -47,9 +50,8 @@ function GoalsOverviewSection({ userData, onViewAllGoals, onCreateGoal }) {
       
       if (data.success) {
         const allGoals = data.goals || [];
-        setGoals(allGoals.slice(0, 3)); // Show only top 3 in overview
+        setGoals(allGoals.slice(0, 3)); 
 
-        // Calculate stats
         const activeGoals = allGoals.filter(g => g.status === 'active');
         const completedGoals = allGoals.filter(g => g.status === 'completed');
         const totalTargetAmount = allGoals.reduce((sum, g) => sum + g.targetAmount, 0);
@@ -67,6 +69,93 @@ function GoalsOverviewSection({ userData, onViewAllGoals, onCreateGoal }) {
       console.error('Error fetching goals overview:', err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleEditClick = (goal, e) => {
+    e.stopPropagation();
+    setEditingGoal(goal._id);
+    setEditValue(goal.currentAmount.toString());
+  };
+
+  const handleCancelEdit = () => {
+    setEditingGoal(null);
+    setEditValue('');
+  };
+
+  const handleSaveEdit = async (goalId) => {
+    if (!editValue || isNaN(editValue) || parseFloat(editValue) < 0) {
+      alert('Please enter a valid amount');
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      const token = localStorage.getItem('token');
+      const baseUrl = import.meta.env.VITE_BASE_URL;
+
+      const response = await fetch(`${baseUrl}/user/goals/${goalId}/progress`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          amount: parseFloat(editValue)
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Update the goal in the local state
+        setGoals(prevGoals => 
+          prevGoals.map(goal => 
+            goal._id === goalId 
+              ? { 
+                  ...goal, 
+                  currentAmount: parseFloat(editValue),
+                  progressPercentage: (parseFloat(editValue) / goal.targetAmount) * 100
+                }
+              : goal
+          )
+        );
+
+        // Update stats
+        const updatedGoals = goals.map(goal => 
+          goal._id === goalId 
+            ? { 
+                ...goal, 
+                currentAmount: parseFloat(editValue),
+                progressPercentage: (parseFloat(editValue) / goal.targetAmount) * 100
+              }
+            : goal
+        );
+        
+        const newTotalCurrentAmount = updatedGoals.reduce((sum, g) => sum + g.currentAmount, 0);
+        setStats(prevStats => ({
+          ...prevStats,
+          totalCurrentAmount: newTotalCurrentAmount
+        }));
+
+        setEditingGoal(null);
+        setEditValue('');
+      } else {
+        alert(data.message || 'Failed to update goal');
+      }
+    } catch (err) {
+      console.error('Error updating goal:', err);
+      alert('Failed to update goal. Please try again.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleKeyPress = (e, goalId) => {
+    if (e.key === 'Enter') {
+      handleSaveEdit(goalId);
+    } else if (e.key === 'Escape') {
+      handleCancelEdit();
     }
   };
 
@@ -168,7 +257,6 @@ function GoalsOverviewSection({ userData, onViewAllGoals, onCreateGoal }) {
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Goals Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <motion.div
               whileHover={cardHover}
@@ -217,7 +305,6 @@ function GoalsOverviewSection({ userData, onViewAllGoals, onCreateGoal }) {
             </motion.div>
           </div>
 
-          {/* Overall Progress Bar */}
           <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
             <div className="flex justify-between items-center mb-3">
               <h4 className="text-white font-semibold">Overall Goal Progress</h4>
@@ -241,7 +328,6 @@ function GoalsOverviewSection({ userData, onViewAllGoals, onCreateGoal }) {
             </div>
           </div>
 
-          {/* Recent Goals */}
           <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
             <h4 className="text-white font-semibold mb-4">Recent Goals</h4>
             <div className="space-y-4">
@@ -249,6 +335,7 @@ function GoalsOverviewSection({ userData, onViewAllGoals, onCreateGoal }) {
                 const category = goalCategories[goal.category] || goalCategories.other;
                 const timeRemaining = getTimeRemaining(goal.targetDate);
                 const TimeIcon = timeRemaining.icon;
+                const isEditing = editingGoal === goal._id;
 
                 return (
                   <motion.div
@@ -259,38 +346,92 @@ function GoalsOverviewSection({ userData, onViewAllGoals, onCreateGoal }) {
                     className="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 bg-gradient-to-r ${category.color} rounded-lg flex items-center justify-center text-sm`}>
+                      <motion.div
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => handleEditClick(goal, e)}
+                        className={`w-10 h-10 bg-gradient-to-r ${category.color} rounded-lg flex items-center justify-center text-sm cursor-pointer relative group`}
+                        title="Click to edit current amount"
+                      >
                         {category.icon}
-                      </div>
+                        <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Edit3 className="w-3 h-3 text-white bg-purple-500 rounded-full p-0.5" />
+                        </div>
+                      </motion.div>
                       <div>
                         <h5 className="font-medium text-white">{goal.title}</h5>
                         <div className="flex items-center gap-4 text-sm">
-                          <span className="text-blue-200">
-                            {getCurrencySymbol(userData.currency)}{goal.currentAmount.toLocaleString()} / 
-                            {getCurrencySymbol(userData.currency)}{goal.targetAmount.toLocaleString()}
-                          </span>
-                          <div className="flex items-center gap-1">
-                            <TimeIcon className={`w-3 h-3 ${timeRemaining.color}`} />
-                            <span className={timeRemaining.color}>{timeRemaining.text}</span>
-                          </div>
+                          {isEditing ? (
+                            <div className="flex items-center gap-2">
+                              <span className="text-blue-200">
+                                {getCurrencySymbol(userData.currency)}
+                              </span>
+                              <input
+                                type="number"
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onKeyDown={(e) => handleKeyPress(e, goal._id)}
+                                className="bg-white/20 border border-white/30 rounded px-2 py-1 text-white text-sm w-20 focus:outline-none focus:border-purple-400"
+                                min="0"
+                                step="0.01"
+                                autoFocus
+                              />
+                              <span className="text-blue-200">
+                                / {getCurrencySymbol(userData.currency)}{goal.targetAmount.toLocaleString()}
+                              </span>
+                              <div className="flex items-center gap-1 ml-2">
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  onClick={() => handleSaveEdit(goal._id)}
+                                  disabled={isUpdating}
+                                  className="text-green-400 hover:text-green-300 p-1 rounded"
+                                >
+                                  <Check className="w-3 h-3" />
+                                </motion.button>
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  onClick={handleCancelEdit}
+                                  className="text-red-400 hover:text-red-300 p-1 rounded"
+                                >
+                                  <X className="w-3 h-3" />
+                                </motion.button>
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-blue-200">
+                              {getCurrencySymbol(userData.currency)}{goal.currentAmount.toLocaleString()} / 
+                              {getCurrencySymbol(userData.currency)}{goal.targetAmount.toLocaleString()}
+                            </span>
+                          )}
+                          
+                          {!isEditing && (
+                            <div className="flex items-center gap-1">
+                              <TimeIcon className={`w-3 h-3 ${timeRemaining.color}`} />
+                              <span className={timeRemaining.color}>{timeRemaining.text}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <p className="text-green-400 font-semibold text-sm">
-                          {goal.progressPercentage.toFixed(1)}%
-                        </p>
-                        <div className="w-16 bg-white/10 rounded-full h-1.5 mt-1">
-                          <div
-                            className={`bg-gradient-to-r ${category.color} h-1.5 rounded-full transition-all duration-500`}
-                            style={{ width: `${Math.min(goal.progressPercentage, 100)}%` }}
-                          />
+                    {!isEditing && (
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <p className="text-green-400 font-semibold text-sm">
+                            {goal.progressPercentage.toFixed(1)}%
+                          </p>
+                          <div className="w-16 bg-white/10 rounded-full h-1.5 mt-1">
+                            <div
+                              className={`bg-gradient-to-r ${category.color} h-1.5 rounded-full transition-all duration-500`}
+                              style={{ width: `${Math.min(goal.progressPercentage, 100)}%` }}
+                            />
+                          </div>
                         </div>
+                        <ArrowRight className="w-4 h-4 text-blue-400 opacity-60" />
                       </div>
-                      <ArrowRight className="w-4 h-4 text-blue-400 opacity-60" />
-                    </div>
+                    )}
                   </motion.div>
                 );
               }) : (
