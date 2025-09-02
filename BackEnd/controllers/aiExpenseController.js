@@ -1,6 +1,6 @@
 const { validationResult } = require('express-validator');
 const Expense = require('../models/ExpenseSchema');
-const AIExpense = require('../models/aiExpense.model');
+// const AIExpense = require('../models/aiExpense.model');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Initialize Gemini AI with updated model name
@@ -490,7 +490,7 @@ exports.exportExpensesForRAG = async (req, res) => {
     success: false,
     message: 'Function not implemented yet'
   });
-};
+};c
 
 exports.exportRAGTrainingData = async (req, res) => {
   res.status(501).json({
