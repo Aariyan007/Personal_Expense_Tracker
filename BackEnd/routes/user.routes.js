@@ -7,7 +7,7 @@ const expenseController = require('../controllers/expense.controller');
 // const goalController = require('../controllers/goal.controller');
 const aiExpenseController = require('../controllers/aiExpenseController');
 
-// User authentication routes
+
 router.post('/register', [
   body('username').notEmpty().withMessage('Username is required'),
   body('email').isEmail().withMessage('Invalid email format'),
@@ -21,7 +21,7 @@ router.post('/login', [
 
 router.post('/onboarding-2', authMiddleware.authUser, userController.onBoarding);
 
-// User profile routes
+
 router.get('/profile', authMiddleware.authUser, userController.getProfile);
 router.get('/logout', authMiddleware.authUser, userController.logOut);
 router.get('/details', authMiddleware.authUser, userController.getUserDetails);

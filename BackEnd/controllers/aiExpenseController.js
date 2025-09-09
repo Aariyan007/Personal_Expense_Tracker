@@ -1,22 +1,33 @@
+// controllers/ai.controller.js
 const { validationResult } = require('express-validator');
-const Expense = require('../models/ExpenseSchema');
-// const AIExpense = require('../models/aiExpense.model');
+const Expense = require('../models/ExpenseSchema'); // Your main expense model
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-// Initialize Gemini AI with updated model name
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ 
-  model: "gemini-1.5-flash" // Updated model name
-});
+// Initialize Gemini AI with error handling
+let model;
+try {
+  if (!process.env.GEMINI_API_KEY) {
+    console.error('❌ GEMINI_API_KEY not found in environment variables');
+  } else {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash" // Using the updated model name
+    });
+    console.log('✅ Gemini AI initialized successfully');
+  }
+} catch (error) {
+  console.error('❌ Failed to initialize Gemini AI:', error.message);
+}
 
 // RAG-Enhanced Monthly Expense Analysis
 exports.processMonthlyExpenseParagraph = async (req, res) => {
   try {
     console.log('=== RAG MONTHLY EXPENSE PROCESSING STARTED ===');
-    console.log('User ID:', req.user?.userId || req.user?.id); // Fixed user ID access
+    console.log('User ID:', req.user?.userId || req.user?.id);
     console.log('Input Paragraph:', req.body.paragraph);
     console.log('Timestamp:', new Date().toISOString());
 
+    // Validation check
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       console.log('Validation Errors:', errors.array());
@@ -28,7 +39,7 @@ exports.processMonthlyExpenseParagraph = async (req, res) => {
     }
 
     const { paragraph } = req.body;
-    const userId = req.user?.userId || req.user?.id; // Fixed user ID access
+    const userId = req.user?.userId || req.user?.id;
 
     if (!userId) {
       return res.status(401).json({
@@ -37,11 +48,17 @@ exports.processMonthlyExpenseParagraph = async (req, res) => {
       });
     }
 
+    // Check if Gemini AI is available
+    if (!model) {
+      console.log('⚠️  Gemini AI not available, using fallback processing');
+      return handleFallbackProcessing(req, res, paragraph, userId);
+    }
+
     // Step 1: Convert paragraph to structured JSON using Gemini
     console.log('🤖 Step 1: Converting paragraph to JSON using Gemini...');
     const structuredData = await convertParagraphToJSON(paragraph);
     
-    // Step 2: Retrieve simple RAG context (fallback without RAGContextService)
+    // Step 2: Retrieve simple RAG context
     console.log('🔍 Step 2: Retrieving RAG context...');
     const ragContext = await retrieveSimpleRAGContext(userId, structuredData);
     
@@ -51,7 +68,7 @@ exports.processMonthlyExpenseParagraph = async (req, res) => {
     
     // Step 4: Save the analysis for future RAG training
     console.log('💾 Step 4: Saving analysis for RAG training...');
-    await saveRAGAnalysis(userId, paragraph, structuredData, ragAnalysis);
+    const saveResult = await saveRAGAnalysis(userId, paragraph, structuredData, ragAnalysis);
 
     console.log('✅ RAG processing completed successfully');
     console.log('=== RAG MONTHLY EXPENSE PROCESSING COMPLETED ===\n');
@@ -62,10 +79,11 @@ exports.processMonthlyExpenseParagraph = async (req, res) => {
       structuredData: structuredData,
       ragContext: {
         totalSimilarExpenses: ragContext.length,
-        categories: [...new Set(ragContext.map(e => e.category || e.aiCategory).filter(Boolean))],
+        categories: [...new Set(ragContext.map(e => e.category).filter(Boolean))],
         contextTypes: [...new Set(ragContext.map(e => e.contextType || 'regular'))],
       },
       analysis: ragAnalysis,
+      saveResult: saveResult,
       timestamp: new Date().toISOString()
     });
 
@@ -74,10 +92,36 @@ exports.processMonthlyExpenseParagraph = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error processing monthly expense paragraph',
-      error: error.message
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Processing failed'
     });
   }
 };
+
+// Fallback processing when Gemini AI is not available
+async function handleFallbackProcessing(req, res, paragraph, userId) {
+  try {
+    const structuredData = fallbackParagraphParser(paragraph);
+    const ragContext = await retrieveSimpleRAGContext(userId, structuredData);
+    const ragAnalysis = generateFallbackAnalysis(structuredData);
+    const saveResult = await saveRAGAnalysis(userId, paragraph, structuredData, ragAnalysis);
+
+    res.json({
+      success: true,
+      originalParagraph: paragraph,
+      structuredData: structuredData,
+      ragContext: {
+        totalSimilarExpenses: ragContext.length,
+        categories: [...new Set(ragContext.map(e => e.category).filter(Boolean))],
+      },
+      analysis: ragAnalysis,
+      saveResult: saveResult,
+      fallbackUsed: true,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    throw error;
+  }
+}
 
 // Step 1: Convert paragraph to structured JSON
 async function convertParagraphToJSON(paragraph) {
@@ -134,7 +178,7 @@ async function convertParagraphToJSON(paragraph) {
       throw new Error('Invalid JSON structure returned by Gemini');
     }
     
-    console.log('✅ Successfully converted paragraph to JSON:', parsedData);
+    console.log('✅ Successfully converted paragraph to JSON');
     return parsedData;
     
   } catch (error) {
@@ -228,27 +272,7 @@ async function retrieveSimpleRAGContext(userId, structuredData) {
     .limit(30)
     .lean();
 
-    // Try to get AI expenses (might not exist)
-    let aiExpenses = [];
-    try {
-      aiExpenses = await AIExpense.find({
-        userId: userId,
-        $or: [
-          { category: { $in: categories } },
-          { aiCategory: { $in: categories } }
-        ]
-      })
-      .sort({ createdAt: -1 })
-      .limit(15)
-      .lean();
-    } catch (error) {
-      console.log('AIExpense collection not found, continuing without AI context');
-    }
-    
-    const allContext = [
-      ...similarExpenses.map(e => ({ ...e, contextType: 'regular' })),
-      ...aiExpenses.map(e => ({ ...e, contextType: 'ai_processed' }))
-    ];
+    const allContext = similarExpenses.map(e => ({ ...e, contextType: 'regular' }));
     
     console.log(`🔍 Retrieved ${allContext.length} items for RAG context`);
     return allContext;
@@ -262,6 +286,10 @@ async function retrieveSimpleRAGContext(userId, structuredData) {
 // Step 3: Generate RAG-enhanced analysis
 async function generateRAGAnalysis(originalParagraph, structuredData, ragContext) {
   try {
+    if (!model) {
+      return generateFallbackAnalysis(structuredData);
+    }
+
     const contextSummary = prepareContextSummary(ragContext);
     
     const prompt = `
@@ -277,28 +305,7 @@ async function generateRAGAnalysis(originalParagraph, structuredData, ragContext
       HISTORICAL SPENDING CONTEXT (RAG DATA):
       ${contextSummary}
       
-      Based on the user's historical spending patterns and current month's expenses, provide:
-      
-      1. SPENDING ANALYSIS:
-         - How does this month compare to their typical patterns?
-         - Which categories show unusual increases/decreases?
-         - Are there any spending anomalies?
-      
-      2. PERSONALIZED INSIGHTS:
-         - Budget recommendations based on their history
-         - Category-specific advice
-         - Savings opportunities
-      
-      3. PREDICTIVE SUGGESTIONS:
-         - Expected future expenses based on patterns
-         - Recommendations for next month
-         - Budget adjustments
-      
-      4. FINANCIAL HEALTH SCORE:
-         - Rate their financial discipline (1-10)
-         - Key strengths and areas for improvement
-      
-      Return a JSON response with this structure:
+      Based on the user's historical spending patterns and current month's expenses, provide a JSON response with this structure:
       {
         "spendingAnalysis": {
           "monthlyComparison": "detailed comparison text",
@@ -328,7 +335,6 @@ async function generateRAGAnalysis(originalParagraph, structuredData, ragContext
         "actionableSteps": ["step1", "step2", "step3"]
       }
       
-      Make your analysis personal, actionable, and based on the actual data patterns you see.
       Return ONLY valid JSON.
     `;
 
@@ -358,7 +364,7 @@ function prepareContextSummary(ragContext) {
   let totalHistoricalSpending = 0;
   
   ragContext.forEach(expense => {
-    const category = expense.category || expense.aiCategory || 'Other';
+    const category = expense.category || 'Other';
     if (!categoryStats[category]) {
       categoryStats[category] = { total: 0, count: 0, avgAmount: 0 };
     }
@@ -382,10 +388,6 @@ function prepareContextSummary(ragContext) {
     ${Object.entries(categoryStats).map(([category, stats]) => 
       `- ${category}: ${stats.count} transactions, $${stats.total.toFixed(2)} total, $${stats.avgAmount.toFixed(2)} average`
     ).join('\n    ')}
-    
-    RECENT PATTERNS:
-    - Most frequent category: ${Object.entries(categoryStats).sort((a,b) => b[1].count - a[1].count)[0]?.[0] || 'None'}
-    - Highest spending category: ${Object.entries(categoryStats).sort((a,b) => b[1].total - a[1].total)[0]?.[0] || 'None'}
   `;
 }
 
@@ -435,7 +437,20 @@ async function saveRAGAnalysis(userId, paragraph, structuredData, analysis) {
         category: expense.category,
         description: expense.description,
         type: 'expense',
-        date: new Date()
+        date: new Date(),
+        // AI Processing Fields
+        originalText: paragraph,
+        merchant: expense.merchant,
+        paymentMethod: expense.paymentMethod,
+        confidence: expense.confidence,
+        aiProcessed: true,
+        suggestions: analysis.actionableSteps || [],
+        // Additional AI fields
+        aiCategory: expense.category,
+        aiAmount: expense.amount,
+        aiDescription: expense.description,
+        processingStatus: 'completed',
+        lastProcessedAt: new Date()
       });
       
       await expenseRecord.save();
@@ -456,7 +471,7 @@ async function saveRAGAnalysis(userId, paragraph, structuredData, analysis) {
   }
 }
 
-// Export other required functions for compatibility
+// Other required functions for compatibility
 exports.processExpenseText = async (req, res) => {
   res.status(501).json({
     success: false,
@@ -490,7 +505,7 @@ exports.exportExpensesForRAG = async (req, res) => {
     success: false,
     message: 'Function not implemented yet'
   });
-};c
+};
 
 exports.exportRAGTrainingData = async (req, res) => {
   res.status(501).json({
